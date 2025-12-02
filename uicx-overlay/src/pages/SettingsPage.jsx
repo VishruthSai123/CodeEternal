@@ -247,7 +247,7 @@ function HotkeySettings({ hotkeys, updateHotkeys }) {
 }
 
 function CloudSyncSettings() {
-  const { user, profile, isAdmin, canAddSnippets, refreshProfile } = useAuthStore();
+  const { user, profile, isAdmin, refreshProfile } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
   const [refreshStatus, setRefreshStatus] = useState(null);
 
@@ -284,7 +284,7 @@ function CloudSyncSettings() {
                   <div>
                     <p className="text-xs text-gray-500 mb-1">Role</p>
                     <p className="text-sm text-gray-300">
-                      {isAdmin ? '👑 Admin' : canAddSnippets ? '✏️ Contributor' : '👤 User'}
+                      {isAdmin ? '👑 Admin' : '👤 User'}
                     </p>
                   </div>
                   <button
@@ -316,8 +316,8 @@ function CloudSyncSettings() {
             <div className="space-y-2">
               <div className="flex items-center justify-between p-3 bg-glass-hover rounded-xl border border-glass-border">
                 <span className="text-sm text-gray-300">Can add snippets</span>
-                <span className={`text-xs px-2 py-1 rounded-full ${canAddSnippets ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>
-                  {canAddSnippets ? 'Yes' : 'No'}
+                <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400">
+                  Yes
                 </span>
               </div>
               <div className="flex items-center justify-between p-3 bg-glass-hover rounded-xl border border-glass-border">
@@ -326,6 +326,11 @@ function CloudSyncSettings() {
                   {isAdmin ? 'Yes' : 'No'}
                 </span>
               </div>
+              {isAdmin && (
+                <p className="text-xs text-gray-500 mt-2">
+                  ✨ Your snippets appear first in the library
+                </p>
+              )}
             </div>
           </div>
         </>
