@@ -47,7 +47,7 @@ export const useAppStore = create(
       getGeminiApiKey: () => get().preferences.geminiApiKey,
     }),
     {
-      name: 'build-eternal-app-storage',
+      name: 'code-eternal-app-storage',
       partialize: (state) => ({
         theme: state.theme,
         preferences: state.preferences,

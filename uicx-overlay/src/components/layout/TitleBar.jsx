@@ -99,8 +99,8 @@ function TitleBar({ projectName, onBackToHome }) {
           </>
         ) : (
           <>
-            <img src="./icon-rounded.png" alt="Build Eternal" className="w-5 h-5 object-cover" />
-            <h1 className="text-sm font-semibold text-gradient">Build Eternal</h1>
+            <img src="./icon-rounded.png" alt="Code Eternal" className="w-5 h-5 object-cover" />
+            <h1 className="text-sm font-semibold text-gradient">Code Eternal</h1>
           </>
         )}
       </div>

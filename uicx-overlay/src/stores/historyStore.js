@@ -66,7 +66,7 @@ export const useHistoryStore = create(
       },
     }),
     {
-      name: 'build-eternal-history-storage',
+      name: 'code-eternal-history-storage',
     }
   )
 );

@@ -1,5 +1,5 @@
 /**
- * Utility functions for Build Eternal
+ * Utility functions for Code Eternal
  */
 
 import { clsx } from 'clsx';

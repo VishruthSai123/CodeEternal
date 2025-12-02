@@ -4,7 +4,7 @@
  */
 
 // API Configuration storage key
-const CONFIG_KEY = 'build-eternal-llm-config';
+const CONFIG_KEY = 'code-eternal-llm-config';
 
 /**
  * Get stored LLM configuration

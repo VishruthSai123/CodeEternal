@@ -181,8 +181,8 @@ function AboutSection() {
   return (
     <div className="space-y-6">
       <div className="text-center py-6">
-        <img src="./icon-rounded.png" alt="Build Eternal" className="w-16 h-16 mx-auto object-cover mb-4" />
-        <h2 className="text-xl font-bold text-gradient mb-1">Build Eternal</h2>
+        <img src="./icon-rounded.png" alt="Code Eternal" className="w-16 h-16 mx-auto object-cover mb-4" />
+        <h2 className="text-xl font-bold text-gradient mb-1">Code Eternal</h2>
         <p className="text-sm text-gray-500">Version 1.0.0</p>
         <p className="text-xs text-accent-teal mt-1">Context-Aware Prompt Builder</p>
       </div>

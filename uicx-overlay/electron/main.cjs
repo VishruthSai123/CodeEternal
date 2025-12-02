@@ -98,7 +98,7 @@ function createTray() {
 
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: 'Show/Hide Build Eternal',
+      label: 'Show/Hide Code Eternal',
       click: () => toggleWindow(),
     },
     {
@@ -118,7 +118,7 @@ function createTray() {
     },
   ]);
 
-  tray.setToolTip('Build Eternal');
+  tray.setToolTip('Code Eternal');
   tray.setContextMenu(contextMenu);
 
   tray.on('click', () => toggleWindow());

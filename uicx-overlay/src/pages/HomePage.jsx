@@ -116,8 +116,8 @@ function HomePage({ onOpenProject, onCreateProject, onBrowseSnippets, onBrowseTe
       {/* Title Bar with Window Controls */}
       <div className="drag-region flex items-center justify-between h-10 px-3 border-b border-glass-border bg-surface-dark flex-shrink-0 rounded-t-2xl">
         <div className="flex items-center gap-2">
-          <img src="./icon-rounded.png" alt="Build Eternal" className="w-5 h-5 object-cover" />
-          <h1 className="text-sm font-semibold text-gradient">Build Eternal</h1>
+          <img src="./icon-rounded.png" alt="Code Eternal" className="w-5 h-5 object-cover" />
+          <h1 className="text-sm font-semibold text-gradient">Code Eternal</h1>
         </div>
 
         <div className="no-drag flex items-center gap-1">
@@ -181,11 +181,11 @@ function HomePage({ onOpenProject, onCreateProject, onBrowseSnippets, onBrowseTe
           <div className="flex items-center gap-3">
             <img 
               src="./icon-rounded.png" 
-              alt="Build Eternal" 
+              alt="Code Eternal" 
               className="w-10 h-10 object-cover"
             />
             <div>
-              <h1 className="text-lg font-bold text-white">Build Eternal</h1>
+              <h1 className="text-lg font-bold text-white">Code Eternal</h1>
               <p className="text-xs text-gray-500">Context-Aware Prompt Builder</p>
             </div>
           </div>

@@ -1,10 +1,10 @@
 {
-  "name": "build-eternal",
+  "name": "code-eternal",
   "version": "1.0.0",
   "type": "module",
-  "description": "Build Eternal - The ultimate context-aware prompt builder for AI Code Editors",
+  "description": "Code Eternal - The ultimate context-aware prompt builder for AI Code Editors",
   "main": "electron/main.cjs",
-  "author": "Build Eternal Team",
+  "author": "Code Eternal Team",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
@@ -49,8 +49,8 @@
     "wait-on": "^8.0.1"
   },
   "build": {
-    "appId": "com.buildeternal.app",
-    "productName": "Build Eternal",
+    "appId": "com.codeeternal.app",
+    "productName": "Code Eternal",
     "directories": {
       "output": "build-output"
     },

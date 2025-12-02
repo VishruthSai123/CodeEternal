@@ -342,8 +342,8 @@ export const useAuthStore = create(
               console.warn('Persisted session is invalid - clearing and re-authenticating');
               // Clear corrupted session data
               clearAuthStorage();
-              localStorage.removeItem('build-eternal-auth');
-              localStorage.removeItem('build-eternal-projects');
+              localStorage.removeItem('code-eternal-auth');
+              localStorage.removeItem('code-eternal-projects');
               
               set({
                 user: null,
@@ -660,10 +660,10 @@ export const useAuthStore = create(
 
           // Clear all storage
           clearAuthStorage();
-          localStorage.removeItem('build-eternal-auth-state');
-          localStorage.removeItem('build-eternal-auth');
-          localStorage.removeItem('build-eternal-projects');
-          localStorage.removeItem('build-eternal-prompts');
+          localStorage.removeItem('code-eternal-auth-state');
+          localStorage.removeItem('code-eternal-auth');
+          localStorage.removeItem('code-eternal-projects');
+          localStorage.removeItem('code-eternal-prompts');
 
           // Sign out from Supabase (non-blocking)
           supabase.auth.signOut().catch(err => {
@@ -764,7 +764,7 @@ export const useAuthStore = create(
       },
     }),
     {
-      name: 'build-eternal-auth-state',
+      name: 'code-eternal-auth-state',
       partialize: (state) => ({
         // Persist full auth state for productivity app - never lose session
         isAuthenticated: state.isAuthenticated,

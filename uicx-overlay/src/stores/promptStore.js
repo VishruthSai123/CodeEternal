@@ -351,7 +351,7 @@ export const usePromptStore = create(
       },
     }),
     {
-      name: 'build-eternal-prompt-storage',
+      name: 'code-eternal-prompt-storage',
       partialize: (state) => ({
         // User input
         userIntent: state.userIntent,

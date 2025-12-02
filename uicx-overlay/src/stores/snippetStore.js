@@ -573,7 +573,7 @@ export const useSnippetStore = create(
       isSnippetSaved: (snippetId) => get().savedSnippetIds.includes(snippetId),
     }),
     {
-      name: 'build-eternal-snippets-storage',
+      name: 'code-eternal-snippets-storage',
       partialize: (state) => ({
         // Persist custom snippets and user preferences
         snippets: state.snippets.filter((s) => s.source === 'custom'),

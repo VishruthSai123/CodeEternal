@@ -11,8 +11,8 @@ if (!isSupabaseConfigured) {
 }
 
 // Dedicated storage key for auth - separate from Zustand
-const AUTH_STORAGE_KEY = 'build-eternal-supabase-auth';
-const BACKUP_AUTH_KEY = 'build-eternal-auth-backup';
+const AUTH_STORAGE_KEY = 'code-eternal-supabase-auth';
+const BACKUP_AUTH_KEY = 'code-eternal-auth-backup';
 
 // Custom storage adapter for persistent session storage with backup
 const customStorage = {
@@ -83,7 +83,7 @@ export const supabase = createClient(
     },
     global: {
       headers: {
-        'x-client-info': 'build-eternal',
+        'x-client-info': 'code-eternal',
       },
       // Add fetch timeout
       fetch: (url, options = {}) => {

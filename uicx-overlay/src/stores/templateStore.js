@@ -663,7 +663,7 @@ export const useTemplateStore = create(
       },
     }),
     {
-      name: 'build-eternal-template-store',
+      name: 'code-eternal-template-store',
       partialize: (state) => ({
         viewMode: state.viewMode,
         likedTemplateIds: state.likedTemplateIds,

@@ -348,8 +348,8 @@ function AboutSection() {
   return (
     <div className="space-y-6">
       <div className="text-center py-4">
-        <img src="./icon-rounded.png" alt="Build Eternal" className="w-20 h-20 mx-auto mb-4 object-cover" />
-        <h3 className="text-xl font-bold text-white mb-1">Build Eternal</h3>
+        <img src="./icon-rounded.png" alt="Code Eternal" className="w-20 h-20 mx-auto mb-4 object-cover" />
+        <h3 className="text-xl font-bold text-white mb-1">Code Eternal</h3>
         <p className="text-sm text-gray-400">Version 1.0.0</p>
         <p className="text-xs text-gray-500 mt-2">Context-Aware Prompt Builder</p>
       </div>
@@ -374,7 +374,7 @@ function AboutSection() {
       </div>
 
       <p className="text-xs text-gray-500 text-center">
-        © 2024 Build Eternal. All rights reserved.
+        © 2024 Code Eternal. All rights reserved.
       </p>
     </div>
   );

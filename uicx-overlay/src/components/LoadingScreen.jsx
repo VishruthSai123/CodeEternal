@@ -20,7 +20,7 @@ function LoadingScreen({ status = 'loading', message, onRetry, onClearCache }) {
   const configs = {
     loading: {
       icon: Loader2,
-      title: 'Loading Build Eternal',
+      title: 'Loading Code Eternal',
       subtitle: 'Preparing your workspace...',
       iconClass: 'animate-spin text-accent-teal',
       showProgress: true,
@@ -205,7 +205,7 @@ function LoadingScreen({ status = 'loading', message, onRetry, onClearCache }) {
         transition={{ delay: 0.5 }}
         className="absolute bottom-4 text-xs text-gray-600"
       >
-        Build Eternal v1.0.0
+        Code Eternal v1.0.0
       </motion.p>
     </div>
   );

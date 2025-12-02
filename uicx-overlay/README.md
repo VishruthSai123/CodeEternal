@@ -1,4 +1,4 @@
-# Build Eternal
+# Code Eternal
 
 > The ultimate context-aware prompt builder for AI Code Editors - Build code that lasts forever.
 
@@ -8,7 +8,7 @@
 
 ## 🚀 Overview
 
-Build Eternal is a floating desktop overlay that sits on top of any AI coding tool (Cursor, WindSurf, V0, etc.) and dramatically improves the quality of AI-generated code by providing:
+Code Eternal is a floating desktop overlay that sits on top of any AI coding tool (Cursor, WindSurf, V0, etc.) and dramatically improves the quality of AI-generated code by providing:
 
 - **Context-aware prompts** - Maintains full project memory across conversations
 - **Template & snippet library** - Design system templates and reusable code components
@@ -65,8 +65,8 @@ Build Eternal is a floating desktop overlay that sits on top of any AI coding to
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/build-eternal.git
-cd build-eternal
+git clone https://github.com/yourusername/code-eternal.git
+cd code-eternal
 
 # Install dependencies
 npm install
@@ -189,4 +189,4 @@ Contributions are welcome! Please read our contributing guidelines before submit
 
 ---
 
-Made with 💜 by the Build Eternal Team
+Made with 💜 by the Code Eternal Team

@@ -92,8 +92,8 @@ function AuthPage() {
       {/* Title Bar with Window Controls */}
       <div className="drag-region flex items-center justify-between h-10 px-3 border-b border-glass-border bg-surface-dark flex-shrink-0 rounded-t-2xl">
         <div className="flex items-center gap-2">
-          <img src="./icon-rounded.png" alt="Build Eternal" className="w-5 h-5 object-cover" />
-          <h1 className="text-sm font-semibold text-gradient">Build Eternal</h1>
+          <img src="./icon-rounded.png" alt="Code Eternal" className="w-5 h-5 object-cover" />
+          <h1 className="text-sm font-semibold text-gradient">Code Eternal</h1>
         </div>
 
         <div className="no-drag flex items-center gap-1">
@@ -161,9 +161,9 @@ function AuthPage() {
             transition={{ type: 'spring', delay: 0.1 }}
             className="inline-flex items-center justify-center w-16 h-16 rounded-[25%] mb-4 overflow-hidden"
           >
-            <img src="./icon-rounded.png" alt="Build Eternal" className="w-full h-full object-cover" />
+            <img src="./icon-rounded.png" alt="Code Eternal" className="w-full h-full object-cover" />
           </motion.div>
-          <h1 className="text-3xl font-bold text-white mb-2">Build Eternal</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Code Eternal</h1>
           <p className="text-xs text-accent-teal mb-2">Context-Aware Prompt Builder</p>
           <p className="text-gray-400">
             {mode === 'login' && 'Welcome back! Sign in to continue.'}

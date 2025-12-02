@@ -286,7 +286,7 @@ export const useProjectStore = create(
       },
     }),
     {
-      name: 'build-eternal-projects',
+      name: 'code-eternal-projects',
       partialize: (state) => ({
         // Cache projects for instant load on refresh
         projects: state.projects,
