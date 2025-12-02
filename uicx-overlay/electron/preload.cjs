@@ -19,6 +19,9 @@ contextBridge.exposeInMainWorld('electron', {
   geminiGenerate: (apiKey, model, prompt) => 
     ipcRenderer.invoke('gemini-generate', { apiKey, model, prompt }),
 
+  // Open external URL (for OAuth)
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
+
   // Docking
   dockLeft: () => ipcRenderer.send('dock-left'),
   dockRight: () => ipcRenderer.send('dock-right'),

@@ -617,21 +617,114 @@ export const useAuthStore = create(
         try {
           set({ isLoading: true, error: null });
 
-          const { error } = await supabase.auth.signInWithOAuth({
+          // Determine the correct redirect URL
+          // For Electron: Use the production web URL for OAuth callback
+          // For Web: Use current origin
+          const isElectron = Boolean(window.electron);
+          const productionUrl = 'https://codeeternal.vercel.app';
+          
+          // For OAuth, always redirect to the web app which will handle the token
+          const redirectUrl = isElectron 
+            ? `${productionUrl}/auth/callback`
+            : `${window.location.origin}/auth/callback`;
+
+          console.log(`OAuth ${provider} login, redirect to: ${redirectUrl}`);
+
+          const { data, error } = await supabase.auth.signInWithOAuth({
             provider,
             options: {
-              redirectTo: window.location.origin,
+              redirectTo: redirectUrl,
+              skipBrowserRedirect: isElectron, // Don't redirect in Electron, we'll handle it
+              queryParams: {
+                access_type: 'offline', // Get refresh token for Google
+                prompt: 'consent', // Always show consent screen
+              },
             },
           });
 
           if (error) throw error;
 
-          // OAuth redirects, so we don't need to update state here
+          // In Electron, open the OAuth URL in system browser
+          if (isElectron && data?.url) {
+            console.log('Opening OAuth in system browser:', data.url);
+            window.electron?.openExternal?.(data.url);
+            
+            // Show message to user
+            set({ 
+              isLoading: false, 
+              error: 'Complete sign in in your browser, then return here.',
+            });
+            
+            // Start polling for session (user will complete OAuth in browser)
+            get().pollForOAuthSession();
+            
+            return { success: true, pending: true };
+          }
+
+          // Web: OAuth redirects, so we don't need to update state here
           return { success: true };
         } catch (error) {
+          console.error('OAuth error:', error);
           set({ error: error.message, isLoading: false });
           return { success: false, error: error.message };
         }
+      },
+
+      // Poll for OAuth session completion (Electron only)
+      pollForOAuthSession: async () => {
+        const maxAttempts = 60; // 2 minutes
+        let attempts = 0;
+
+        const poll = async () => {
+          attempts++;
+          
+          try {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            
+            if (session) {
+              console.log('OAuth session detected!');
+              
+              // Fetch profile
+              const profile = await fetchProfileDirect(session.user.id);
+              
+              set({
+                user: session.user,
+                profile,
+                session,
+                isAuthenticated: true,
+                isLoading: false,
+                canAddSnippets: profile?.can_add_snippets || false,
+                isAdmin: profile?.is_admin || false,
+                sessionStatus: 'active',
+                sessionExpiresAt: session.expires_at * 1000,
+                lastActivity: Date.now(),
+                error: null,
+              });
+
+              get().scheduleSessionRefresh(session);
+              get().startKeepAlive();
+              
+              return;
+            }
+
+            if (attempts < maxAttempts) {
+              setTimeout(poll, 2000); // Poll every 2 seconds
+            } else {
+              set({ 
+                isLoading: false, 
+                error: 'OAuth timed out. Please try again.',
+              });
+            }
+          } catch (err) {
+            console.error('OAuth poll error:', err);
+            if (attempts < maxAttempts) {
+              setTimeout(poll, 2000);
+            }
+          }
+        };
+
+        // Start polling after a short delay
+        setTimeout(poll, 3000);
       },
 
       // Sign out - THIS IS THE ONLY WAY SESSION SHOULD END

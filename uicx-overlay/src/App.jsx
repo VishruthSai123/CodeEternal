@@ -11,6 +11,7 @@ import HomePage from './pages/HomePage';
 import BrowseSnippets from './pages/BrowseSnippets';
 import BrowseTemplates from './pages/BrowseTemplates';
 import SettingsPage from './pages/SettingsPage';
+import AuthCallback from './pages/AuthCallback';
 import CreateProjectModal from './components/CreateProjectModal';
 import LoadingScreen from './components/LoadingScreen';
 import SessionStatus from './components/SessionStatus';
@@ -22,12 +23,24 @@ import { useSnippetStore } from './stores/snippetStore';
 import { supabase } from './lib/supabase';
 import useSessionMonitor from './hooks/useSessionMonitor';
 
+// Check if current URL is an OAuth callback
+const isOAuthCallback = () => {
+  const hash = window.location.hash;
+  const path = window.location.pathname;
+  
+  // Check for OAuth callback path or tokens in hash
+  return path.includes('/auth/callback') || 
+         hash.includes('access_token') || 
+         hash.includes('error=');
+};
+
 function App() {
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [showBrowseSnippets, setShowBrowseSnippets] = useState(false);
   const [showBrowseTemplates, setShowBrowseTemplates] = useState(false);
   const [browseTemplateCategory, setBrowseTemplateCategory] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [isOAuthProcessing, setIsOAuthProcessing] = useState(isOAuthCallback());
   
   const { initializeApp, activeTab, setActiveTab } = useAppStore();
   const { 
@@ -45,6 +58,13 @@ function App() {
 
   // Monitor session health
   useSessionMonitor();
+
+  // Handle OAuth callback completion
+  const handleOAuthComplete = () => {
+    // Clear URL hash/params and OAuth processing state
+    window.history.replaceState({}, document.title, window.location.pathname);
+    setIsOAuthProcessing(false);
+  };
 
   useEffect(() => {
     initializeApp();
@@ -155,6 +175,11 @@ function App() {
     }
     clearCacheAndLogout();
   };
+
+  // OAuth callback processing
+  if (isOAuthProcessing) {
+    return <AuthCallback onComplete={handleOAuthComplete} />;
+  }
 
   // Loading state
   if (authLoading) {

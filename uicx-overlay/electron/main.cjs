@@ -1,4 +1,4 @@
-const { app, BrowserWindow, globalShortcut, ipcMain, screen, clipboard, Tray, Menu, nativeImage, session } = require('electron');
+const { app, BrowserWindow, globalShortcut, ipcMain, screen, clipboard, Tray, Menu, nativeImage, session, shell } = require('electron');
 const path = require('path');
 
 let mainWindow = null;
@@ -257,6 +257,17 @@ function setupIpcHandlers() {
     if (mainWindow) {
       const { width: screenWidth } = screen.getPrimaryDisplay().workAreaSize;
       mainWindow.setBounds({ x: screenWidth - 440, y: 100, width: 420, height: 700 });
+    }
+  });
+
+  // Open external URLs (for OAuth)
+  ipcMain.handle('open-external', async (_, url) => {
+    try {
+      await shell.openExternal(url);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to open external URL:', error);
+      return { success: false, error: error.message };
     }
   });
 }
