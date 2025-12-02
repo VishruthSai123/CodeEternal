@@ -1,0 +1,75 @@
+{
+  "name": "build-eternal",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Build Eternal - The ultimate context-aware prompt builder for AI Code Editors",
+  "main": "electron/main.cjs",
+  "author": "Build Eternal Team",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:web": "vite build",
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "electron:build": "vite build && electron-builder",
+    "electron:build:win": "vite build && electron-builder --win",
+    "electron:build:mac": "vite build && electron-builder --mac",
+    "electron:build:linux": "vite build && electron-builder --linux",
+    "vercel:build": "vite build"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.86.0",
+    "better-sqlite3": "^11.5.0",
+    "clsx": "^2.1.1",
+    "electron-store": "^10.0.0",
+    "framer-motion": "^11.11.0",
+    "lucide-react": "^0.460.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "robotjs": "^0.6.0",
+    "tailwind-merge": "^2.5.4",
+    "uuid": "^10.0.0",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.0",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "png-to-ico": "^3.0.1",
+    "postcss": "^8.4.49",
+    "sharp": "^0.34.5",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.1",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.buildeternal.app",
+    "productName": "Build Eternal",
+    "directories": {
+      "output": "build-output"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon-rounded.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon-rounded.png"
+    }
+  }
+}

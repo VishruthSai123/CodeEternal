@@ -1,0 +1,255 @@
+-- Add likes_count and is_admin_snippet columns to snippets table
+ALTER TABLE snippets 
+ADD COLUMN IF NOT EXISTS likes_count INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS is_admin_snippet BOOLEAN DEFAULT false;
+
+-- Create snippet_likes table for tracking who liked what
+CREATE TABLE IF NOT EXISTS snippet_likes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  snippet_id UUID NOT NULL REFERENCES snippets(id) ON DELETE CASCADE,# 🎨 UI Development Request
+
+---
+
+## 📋 Project Context
+
+| **Project Type** | to-do app |
+|------------------|------------------------------|
+**🎯 Goal:** help users manage tasks and improve productivity
+
+---
+
+## 🎯 Request
+
+> Create 
+
+---
+
+## ⚙️ Technical Requirements
+
+| Requirement | Value |
+|-------------|-------|
+| **Framework** | Html |
+| **Style System** | modern |
+
+### 📄 Template
+
+Using: **Dashboard**
+
+> Admin panel with sidebar, cards, and data tables
+
+---
+
+## 🧩 UI Component Snippets
+
+_1 component(s) selected as reference:_
+
+### 1. Gradient Button #1
+
+**Source:** `cloud` | **Category:** `buttons`
+
+> 💡 Gradient Button , Modern
+
+📸 **Visual Reference:** _[Image attached below]_
+
+**Code:**
+
+```react
+import React from 'react';
+import styled from 'styled-components';
+
+const Button = () => {
+  return (
+    <StyledWrapper>
+      <button className="btn">
+        <span>Get started</span>
+      </button>
+    </StyledWrapper>
+  );
+}
+
+const StyledWrapper = styled.div`
+  .btn {
+    --fancy-button-gradient-0: #8d49fd;
+    --fancy-button-gradient-50: #7f56f3;
+    --fancy-button-gradient-100: #5691f3;
+    --fancy-button-inner-shadow-top: rgba(233, 209, 255, 0.2);
+    --fancy-button-inner-shadow-top-lg: rgba(9, 12, 60, 0.1);
+    --fancy-button-inner-shadow-bottom: rgba(137, 222, 246, 0.3);
+    --fancy-button-shine-top: #e9d1ff;
+    --fancy-button-shine-bottom: #adfff9;
+    font-weight: 500;
+    font-size: 15px;
+    line-height: 21px;
+    text-shadow: 0px 0.5px 0.5px rgba(0, 0, 0, 0.2);
+    padding: 0;
+    margin: 0;
+    appearance: none;
+    border: none;
+    outline: none;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    z-index: 1;
+    border-radius: 25px;
+    color: #fff;
+    background-image: linear-gradient(
+      to bottom,
+      var(--fancy-button-gradient-0) 0%,
+      var(--fancy-button-gradient-50) 50%,
+      var(--fancy-button-gradient-100) 100%
+    );
+    box-shadow:
+      0px 4px 12px rgba(9, 12, 60, 0.15),
+      0px 2px 8px rgba(9, 12, 60, 0.15),
+      0px 1px 3px var(--fancy-button-inner-shadow-top-lg),
+      inset 0px 1px 1px var(--fancy-button-inner-shadow-top),
+      inset 0px -1px 3px var(--fancy-button-inner-shadow-bottom);
+  }
+
+  .btn:before,
+  .btn:after {
+    content: "";
+    position: absolute;
+    border-radius: inherit;
+    will-change: transform;
+  }
+
+  .btn:before {
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--fancy-button-shine-top);
+    width: 96px;
+    height: 6px;
+    top: -3px;
+    opacity: 0.6;
+    filter: blur(6px);
+    transition: opacity 0.25s;
+  }
+
+  .btn:after {
+    inset: 0;
+    background-size: cover;
+    z-index: 2;
+    opacity: 0.3;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .btn span {
+    display: block;
+    padding: 12px 24px;
+    border-radius: inherit;
+    overflow: hidden;
+    position: relative;
+    background-image: linear-gradient(
+      to bottom,
+      var(--fancy-button-shine-top),
+      transparent 8px
+    );
+    background-position: 0 -6px;
+    background-repeat: no-repeat;
+    z-index: 1;
+  }
+
+  .btn span:before,
+  .btn span:after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background-color: var(--fancy-button-shine-bottom);
+    transition:
+      opacity 0.25s,
+      transform 0.25s;
+    will-change: transform;
+  }
+
+  .btn span:before {
+    width: 92px;
+    height: 8px;
+    bottom: -4px;
+    opacity: 0.75;
+    filter: blur(6px);
+  }
+
+  .btn span:after {
+    width: 112px;
+    height: 1px;
+    bottom: 0;
+    opacity: 0.9;
+    filter: blur(1px);
+  }
+
+  .btn:hover span:before {
+    opacity: 0.8;
+  }
+
+  .btn:hover span:before {
+    transform: translateX(-50%) scale(1.25);
+  }
+
+  .btn:hover span:after {
+    opacity: 1;
+  }`;
+
+export default Button;
+
+```
+
+**Usage:** "Get Started"
+
+> 🖼️ **Note:** 1 UI reference image(s) from snippets are attached.
+> Please analyze and match their visual style, spacing, and design patterns.
+
+---
+
+## ⚠️ Constraints & Rules
+
+- ❌ No inline styles - use CSS classes only
+- ✅ Use Tailwind CSS utility classes
+- 📏 Keep each component under 200 lines
+- 📱 Use mobile-first responsive design
+
+---
+
+## 📝 Session Context
+
+_Summary of recent work in this session:_
+
+> Development focused on creating a task management application.
+
+---
+
+_Generated by UICX Overlay_
+  user_id UUID NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(snippet_id, user_id)
+);
+
+-- Create snippet_saves table for tracking saved/bookmarked snippets
+CREATE TABLE IF NOT EXISTS snippet_saves (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  snippet_id UUID NOT NULL REFERENCES snippets(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(snippet_id, user_id)
+);
+
+-- Disable RLS on these tables (consistent with other tables)
+ALTER TABLE snippet_likes DISABLE ROW LEVEL SECURITY;
+ALTER TABLE snippet_saves DISABLE ROW LEVEL SECURITY;
+
+-- Create indexes for performance
+CREATE INDEX IF NOT EXISTS idx_snippet_likes_snippet ON snippet_likes(snippet_id);
+CREATE INDEX IF NOT EXISTS idx_snippet_likes_user ON snippet_likes(user_id);
+CREATE INDEX IF NOT EXISTS idx_snippet_saves_snippet ON snippet_saves(snippet_id);
+CREATE INDEX IF NOT EXISTS idx_snippet_saves_user ON snippet_saves(user_id);
+CREATE INDEX IF NOT EXISTS idx_snippets_likes_count ON snippets(likes_count DESC);
+CREATE INDEX IF NOT EXISTS idx_snippets_admin ON snippets(is_admin_snippet);
+
+-- Add comment for documentation
+COMMENT ON COLUMN snippets.likes_count IS 'Number of likes for this snippet';
+COMMENT ON COLUMN snippets.is_admin_snippet IS 'True if snippet was created by an admin - always shown at top';
+COMMENT ON TABLE snippet_likes IS 'Tracks which users liked which snippets';
+COMMENT ON TABLE snippet_saves IS 'Tracks which users saved/bookmarked which snippets';
