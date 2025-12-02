@@ -36,7 +36,7 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.cjs'),
-      webSecurity: true, // Keep security enabled
+      webSecurity: false, // Allow loading from Vercel with preload
     },
   });
 
@@ -66,8 +66,15 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
-    // Production: load bundled files (includes env vars from build)
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    // Production: load from Vercel for automatic updates
+    // Users always get the latest version without reinstalling
+    mainWindow.loadURL(PRODUCTION_URL);
+    
+    // Fallback to local files if offline
+    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+      console.log('Failed to load from web, falling back to local files:', errorDescription);
+      mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    });
   }
 
   // Set icon explicitly for Windows
