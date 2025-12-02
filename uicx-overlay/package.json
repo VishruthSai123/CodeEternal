@@ -12,10 +12,10 @@
     "build:web": "vite build",
     "preview": "vite preview",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron:build": "vite build && electron-builder",
-    "electron:build:win": "vite build && electron-builder --win",
-    "electron:build:mac": "vite build && electron-builder --mac",
-    "electron:build:linux": "vite build && electron-builder --linux",
+    "electron:build": "cross-env ELECTRON=true vite build && electron-builder",
+    "electron:build:win": "cross-env ELECTRON=true vite build && electron-builder --win",
+    "electron:build:mac": "cross-env ELECTRON=true vite build && electron-builder --mac",
+    "electron:build:linux": "cross-env ELECTRON=true vite build && electron-builder --linux",
     "vercel:build": "vite build"
   },
   "dependencies": {
@@ -40,6 +40,7 @@
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.1.0",
+    "cross-env": "^10.1.0",
     "electron": "^33.2.0",
     "electron-builder": "^25.1.8",
     "png-to-ico": "^3.0.1",
