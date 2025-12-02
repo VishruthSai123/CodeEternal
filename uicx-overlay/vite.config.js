@@ -25,6 +25,8 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
+      // Externalize Electron-only packages for web build
+      external: isElectron ? [] : ['electron', 'better-sqlite3', 'robotjs', 'electron-store'],
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'framer-motion', 'zustand'],
@@ -32,6 +34,10 @@ export default defineConfig({
         },
       },
     },
+  },
+  // Optimize deps - exclude native modules
+  optimizeDeps: {
+    exclude: ['better-sqlite3', 'robotjs', 'electron-store', 'electron'],
   },
   server: {
     port: 5173,
