@@ -36,7 +36,7 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.cjs'),
-      webSecurity: true,
+      webSecurity: true, // Keep security enabled
     },
   });
 
@@ -66,8 +66,8 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
-    // Production: load from Vercel (always latest deployed version)
-    mainWindow.loadURL(PRODUCTION_URL);
+    // Production: load bundled files (includes env vars from build)
+    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 
   // Set icon explicitly for Windows
