@@ -174,10 +174,12 @@ export const useSnippetStore = create(
       // Toggle like on a snippet (one per user per snippet)
       toggleLike: async (snippetId) => {
         const user = useAuthStore.getState().user;
+        const session = useAuthStore.getState().session;
         if (!user) return { success: false, error: 'Please login to like snippets' };
 
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const authToken = session?.access_token || supabaseKey;
         
         // First, check if user already liked this snippet (source of truth from DB)
         try {
@@ -186,7 +188,7 @@ export const useSnippetStore = create(
             {
               headers: {
                 'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`,
+                'Authorization': `Bearer ${authToken}`,
               },
             }
           );
@@ -201,7 +203,7 @@ export const useSnippetStore = create(
                 method: 'DELETE',
                 headers: {
                   'apikey': supabaseKey,
-                  'Authorization': `Bearer ${supabaseKey}`,
+                  'Authorization': `Bearer ${authToken}`,
                 },
               }
             );
@@ -223,7 +225,7 @@ export const useSnippetStore = create(
                 method: 'POST',
                 headers: {
                   'apikey': supabaseKey,
-                  'Authorization': `Bearer ${supabaseKey}`,
+                  'Authorization': `Bearer ${authToken}`,
                   'Content-Type': 'application/json',
                   'Prefer': 'resolution=ignore-duplicates', // Ignore if already exists
                 },
@@ -253,10 +255,12 @@ export const useSnippetStore = create(
       // Toggle save on a snippet (one per user per snippet)
       toggleSave: async (snippetId) => {
         const user = useAuthStore.getState().user;
+        const session = useAuthStore.getState().session;
         if (!user) return { success: false, error: 'Please login to save snippets' };
 
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const authToken = session?.access_token || supabaseKey;
 
         try {
           // First, check if user already saved this snippet (source of truth from DB)
@@ -265,7 +269,7 @@ export const useSnippetStore = create(
             {
               headers: {
                 'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`,
+                'Authorization': `Bearer ${authToken}`,
               },
             }
           );
@@ -280,7 +284,7 @@ export const useSnippetStore = create(
                 method: 'DELETE',
                 headers: {
                   'apikey': supabaseKey,
-                  'Authorization': `Bearer ${supabaseKey}`,
+                  'Authorization': `Bearer ${authToken}`,
                 },
               }
             );
@@ -298,7 +302,7 @@ export const useSnippetStore = create(
                 method: 'POST',
                 headers: {
                   'apikey': supabaseKey,
-                  'Authorization': `Bearer ${supabaseKey}`,
+                  'Authorization': `Bearer ${authToken}`,
                   'Content-Type': 'application/json',
                   'Prefer': 'resolution=ignore-duplicates', // Ignore if already exists
                 },
@@ -324,6 +328,7 @@ export const useSnippetStore = create(
       // Add custom snippet (saves to Supabase - global library)
       addSnippet: async (snippet) => {
         const user = useAuthStore.getState().user;
+        const session = useAuthStore.getState().session;
         const isAdmin = useAuthStore.getState().isAdmin;
 
         // Must be logged in to add snippets
@@ -356,13 +361,16 @@ export const useSnippetStore = create(
           const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
           const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
           
+          // Use session access token for RLS, fallback to anon key
+          const authToken = session?.access_token || supabaseKey;
+          
           const response = await fetch(
             `${supabaseUrl}/rest/v1/snippets`,
             {
               method: 'POST',
               headers: {
                 'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`,
+                'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json',
                 'Prefer': 'return=representation',
               },
@@ -425,6 +433,8 @@ export const useSnippetStore = create(
 
       // Update snippet
       updateSnippet: async (snippetId, updates) => {
+        const session = useAuthStore.getState().session;
+        
         // Update locally
         set((state) => ({
           snippets: state.snippets.map((s) =>
@@ -440,6 +450,7 @@ export const useSnippetStore = create(
           try {
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
             const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+            const authToken = session?.access_token || supabaseKey;
             
             await fetch(
               `${supabaseUrl}/rest/v1/snippets?id=eq.${snippetId}`,
@@ -447,7 +458,7 @@ export const useSnippetStore = create(
                 method: 'PATCH',
                 headers: {
                   'apikey': supabaseKey,
-                  'Authorization': `Bearer ${supabaseKey}`,
+                  'Authorization': `Bearer ${authToken}`,
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
@@ -479,6 +490,8 @@ export const useSnippetStore = create(
 
       // Remove snippet
       removeSnippet: async (snippetId) => {
+        const session = useAuthStore.getState().session;
+        
         // Remove locally
         set((state) => ({
           snippets: state.snippets.filter((s) => s.id !== snippetId),
@@ -490,6 +503,7 @@ export const useSnippetStore = create(
           try {
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
             const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+            const authToken = session?.access_token || supabaseKey;
             
             await fetch(
               `${supabaseUrl}/rest/v1/snippets?id=eq.${snippetId}`,
@@ -497,7 +511,7 @@ export const useSnippetStore = create(
                 method: 'DELETE',
                 headers: {
                   'apikey': supabaseKey,
-                  'Authorization': `Bearer ${supabaseKey}`,
+                  'Authorization': `Bearer ${authToken}`,
                 },
               }
             );
