@@ -48,6 +48,7 @@ export const useAuthStore = create(
       isLoading: true,
       isAuthenticated: false,
       error: null,
+      oauthPending: false, // True when waiting for OAuth in external browser
 
       // Permissions (from profile)
       canAddSnippets: false,
@@ -58,6 +59,9 @@ export const useAuthStore = create(
       lastActivity: null,
       isOnline: navigator.onLine,
       sessionExpiresAt: null,
+
+      // Clear OAuth pending state
+      clearOAuthPending: () => set({ oauthPending: false }),
 
       // Set online status
       setOnlineStatus: (isOnline) => set({ isOnline }),
@@ -647,12 +651,16 @@ export const useAuthStore = create(
           // In Electron, open the OAuth URL in system browser
           if (isElectron && data?.url) {
             console.log('Opening OAuth in system browser:', data.url);
-            window.electron?.openExternal?.(data.url);
             
-            // Show message to user
+            // Try to open external URL
+            const result = await window.electron?.openExternal?.(data.url);
+            console.log('openExternal result:', result);
+            
+            // Show info message to user (not an error)
             set({ 
               isLoading: false, 
-              error: 'Complete sign in in your browser, then return here.',
+              error: null,
+              oauthPending: true, // New flag for pending OAuth
             });
             
             // Start polling for session (user will complete OAuth in browser)
@@ -699,6 +707,7 @@ export const useAuthStore = create(
                 sessionExpiresAt: session.expires_at * 1000,
                 lastActivity: Date.now(),
                 error: null,
+                oauthPending: false, // Clear pending state
               });
 
               get().scheduleSessionRefresh(session);
@@ -713,6 +722,7 @@ export const useAuthStore = create(
               set({ 
                 isLoading: false, 
                 error: 'OAuth timed out. Please try again.',
+                oauthPending: false,
               });
             }
           } catch (err) {
