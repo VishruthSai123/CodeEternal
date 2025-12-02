@@ -23,8 +23,37 @@ function AuthCallback({ onComplete }) {
           throw new Error(errorDescription || error);
         }
 
-        // Supabase should automatically handle the OAuth callback
-        // and set the session. We just need to verify it worked.
+        // Check if we have a code (PKCE flow) - need to exchange it
+        const code = queryParams.get('code');
+        
+        if (code) {
+          console.log('PKCE code detected, exchanging for session...');
+          // Exchange the code for a session
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          
+          if (exchangeError) {
+            throw exchangeError;
+          }
+          
+          if (data.session) {
+            console.log('Session obtained from code exchange');
+            setStatus('success');
+            setMessage('Sign in successful! Redirecting...');
+            
+            // Re-initialize auth store with the new session
+            await initialize();
+            
+            // Clear URL and complete
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            setTimeout(() => {
+              onComplete?.();
+            }, 1500);
+            return;
+          }
+        }
+
+        // Fallback: Check if session already exists (token in hash)
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
