@@ -8,6 +8,9 @@ let isVisible = true;
 // Determine if we're in development mode
 const isDev = !app.isPackaged;
 
+// Production URL - the deployed Vercel app
+const PRODUCTION_URL = 'https://codeeternal.vercel.app';
+
 function createWindow() {
   const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
 
@@ -37,16 +40,16 @@ function createWindow() {
     },
   });
 
-  // Disable CORS for Google API requests
+  // Disable CORS for API requests (Gemini and Supabase)
   session.defaultSession.webRequest.onBeforeSendHeaders(
-    { urls: ['https://generativelanguage.googleapis.com/*'] },
+    { urls: ['https://generativelanguage.googleapis.com/*', 'https://*.supabase.co/*'] },
     (details, callback) => {
       callback({ requestHeaders: { ...details.requestHeaders } });
     }
   );
 
   session.defaultSession.webRequest.onHeadersReceived(
-    { urls: ['https://generativelanguage.googleapis.com/*'] },
+    { urls: ['https://generativelanguage.googleapis.com/*', 'https://*.supabase.co/*'] },
     (details, callback) => {
       callback({
         responseHeaders: {
@@ -59,10 +62,12 @@ function createWindow() {
 
   // Load the app
   if (isDev) {
+    // Development: use localhost for hot reload
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    // Production: load from Vercel (always latest deployed version)
+    mainWindow.loadURL(PRODUCTION_URL);
   }
 
   // Set icon explicitly for Windows
