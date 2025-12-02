@@ -3,22 +3,51 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co https:; connect-src 'self' https://generativelanguage.googleapis.com https://*.supabase.co wss://*.supabase.co https://*.vercel.app;">
-    <title>Code Eternal</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co https:; connect-src 'self' https://generativelanguage.googleapis.com https://*.supabase.co wss://*.supabase.co https://*.vercel.app https://codeeternal.vercel.app;">
+    
+    <!-- SEO & Meta -->
+    <title>Code Eternal - AI-Powered Prompt Builder for Developers</title>
+    <meta name="description" content="The ultimate context-aware prompt builder for AI Code Editors. Build code that lasts forever with Code Eternal.">
+    <meta name="keywords" content="AI, code editor, prompt builder, developer tools, Cursor, WindSurf, coding assistant">
+    <meta name="author" content="Code Eternal">
+    
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://codeeternal.vercel.app/">
+    <meta property="og:title" content="Code Eternal - AI-Powered Prompt Builder">
+    <meta property="og:description" content="The ultimate context-aware prompt builder for AI Code Editors. Build code that lasts forever.">
+    <meta property="og:image" content="https://codeeternal.vercel.app/icon-rounded.png">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Code Eternal - AI-Powered Prompt Builder">
+    <meta name="twitter:description" content="The ultimate context-aware prompt builder for AI Code Editors.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/icon-rounded.png">
+    <link rel="apple-touch-icon" href="/icon-rounded.png">
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-      /* Prevent FOUC */
+      /* Prevent FOUC - Use dark background for web, transparent for Electron */
       html {
-        background: transparent;
+        background: #0f0f1a;
       }
       body {
         margin: 0;
         padding: 0;
-        overflow: hidden;
-        background: transparent;
+        overflow: auto;
+        background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+        min-height: 100vh;
         -webkit-app-region: no-drag;
+      }
+      /* Center the app for web view */
+      #root {
+        max-width: 100%;
+        min-height: 100vh;
       }
       /* Custom scrollbar */
       ::-webkit-scrollbar {
