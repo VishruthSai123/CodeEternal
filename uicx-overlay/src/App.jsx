@@ -53,7 +53,7 @@ function App() {
     clearCacheAndLogout
   } = useAuthStore();
   const { currentProject, setCurrentProject, clearCurrentProject, loadProjectContext } = useProjectStore();
-  const { setCurrentProjectId, loadFromProject, forceSave } = usePromptStore();
+  const { setCurrentProjectId, loadFromProject, forceSave, clearContext } = usePromptStore();
   const { fetchSnippets } = useSnippetStore();
 
   // Monitor session health
@@ -146,17 +146,23 @@ function App() {
   };
 
   const handleProjectCreated = (project) => {
+    // Clear all previous context for fresh project
+    clearContext();
     setCurrentProject(project);
-    // Set project ID for new project (empty context)
     setCurrentProjectId(project.id);
     setActiveTab('prompt');
   };
 
-  const handleBackToHome = () => {
-    // Save current project context before navigating away (non-blocking)
-    forceSave().catch(err => console.warn('Save on exit failed:', err));
+  const handleBackToHome = async () => {
+    // Save current project context before navigating away
+    try {
+      await forceSave();
+    } catch (err) {
+      console.warn('Save on exit failed:', err);
+    }
+    // Clear context so next project starts fresh
+    clearContext();
     clearCurrentProject();
-    setCurrentProjectId(null);
   };
 
   const handleRetry = () => {

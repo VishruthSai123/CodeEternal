@@ -186,7 +186,7 @@ function AuthCallback({ onComplete }) {
   }, [initialize, onComplete]);
 
   return (
-    <div className="h-screen flex flex-col items-center justify-center bg-surface-dark">
+    <div className="h-screen flex flex-col items-center justify-center bg-surface-dark rounded-2xl border border-glass-border overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent-teal/10 rounded-full blur-3xl" />

@@ -34,20 +34,25 @@
     <style>
       /* Prevent FOUC - Use dark background for web, transparent for Electron */
       html {
-        background: #0f0f1a;
+        background: transparent;
+        border-radius: 16px;
+        overflow: hidden;
       }
       body {
         margin: 0;
         padding: 0;
-        overflow: auto;
+        overflow: hidden;
         background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
         min-height: 100vh;
+        border-radius: 16px;
         -webkit-app-region: no-drag;
       }
       /* Center the app for web view */
       #root {
         max-width: 100%;
         min-height: 100vh;
+        border-radius: 16px;
+        overflow: hidden;
       }
       /* Custom scrollbar */
       ::-webkit-scrollbar {

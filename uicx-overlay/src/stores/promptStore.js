@@ -360,6 +360,60 @@ export const usePromptStore = create(
         });
       },
 
+      // Clear all context (for new project creation)
+      clearContext: () => {
+        set({
+          userIntent: '',
+          selectedSnippets: [],
+          selectedImages: [],
+          codeAttachments: [],
+          template: null,
+          contextSummary: {
+            projectType: '',
+            componentsUsed: [],
+            lastChange: '',
+            globalIntent: '',
+            techStack: [],
+            designStyle: '',
+            sessionPhase: 'planning',
+          },
+          sessionSummary: '',
+          conversationHistory: [],
+          lastGeneratedPrompt: '',
+          currentProjectId: null,
+          // Keep constraints as defaults
+          constraints: {
+            noInlineStyles: true,
+            useTailwind: true,
+            useTypeScript: false,
+            strictTypes: false,
+            ariaRequired: false,
+            wcagCompliance: false,
+            keyboardNavigation: false,
+            mobileFirst: true,
+            darkModeSupport: false,
+            rtlSupport: false,
+            lazyLoading: false,
+            codeSpitting: false,
+            memoization: false,
+            maxLines: 200,
+            modularCode: true,
+            documentedCode: false,
+            testCoverage: false,
+            inputValidation: false,
+            xssPrevention: false,
+            csrfProtection: false,
+            errorHandling: true,
+            loadingStates: true,
+            optimisticUpdates: false,
+            smoothTransitions: false,
+            reduceMotion: false,
+          },
+          framework: 'react',
+          stylePreset: 'glass',
+        });
+      },
+
       // Force save immediately (for navigation away, etc.)
       forceSave: async () => {
         const { currentProjectId } = get();
