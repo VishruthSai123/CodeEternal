@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
@@ -7,15 +7,23 @@ function AuthCallback({ onComplete }) {
   const [status, setStatus] = useState('processing'); // 'processing' | 'success' | 'error'
   const [message, setMessage] = useState('Completing sign in...');
   const { initialize } = useAuthStore();
+  const handledRef = useRef(false);
 
   useEffect(() => {
+    // Prevent double execution
+    if (handledRef.current) return;
+    handledRef.current = true;
+
     const handleCallback = async () => {
       try {
-        // Get the URL hash parameters (implicit flow returns tokens in hash)
+        console.log('AuthCallback: Starting OAuth callback handling...');
+        console.log('AuthCallback: Current URL:', window.location.href);
+        console.log('AuthCallback: Hash:', window.location.hash);
+        
+        // Check for error in URL first
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const queryParams = new URLSearchParams(window.location.search);
         
-        // Check for error in URL
         const error = hashParams.get('error') || queryParams.get('error');
         const errorDescription = hashParams.get('error_description') || queryParams.get('error_description');
         
@@ -23,81 +31,104 @@ function AuthCallback({ onComplete }) {
           throw new Error(errorDescription || error);
         }
 
-        // Check for access_token in hash (implicit flow)
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
+        // With detectSessionInUrl: true, Supabase automatically processes the hash
+        // and triggers an auth state change. We need to listen for that.
         
-        if (accessToken) {
-          console.log('Access token found in URL hash, setting session...');
-          
-          // Set session from tokens
-          const { data, error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken || '',
-          });
-          
-          if (sessionError) {
-            throw sessionError;
-          }
-          
-          if (data.session) {
-            console.log('Session set successfully');
-            setStatus('success');
-            setMessage('Sign in successful! Redirecting...');
-            
-            // Clear URL hash
-            window.history.replaceState({}, document.title, window.location.pathname);
-            
-            // Re-initialize auth store
-            await initialize();
-            
-            setTimeout(() => {
-              onComplete?.();
-            }, 1500);
-            return;
-          }
-        }
-
-        // Fallback: Check if session already exists
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        // First, check if session already exists (Supabase may have already processed it)
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
         
-        if (sessionError) {
-          throw sessionError;
-        }
-
-        if (session) {
+        if (existingSession) {
+          console.log('AuthCallback: Session already exists!', existingSession.user?.email);
           setStatus('success');
           setMessage('Sign in successful! Redirecting...');
+          
+          // Clear URL hash if present
+          if (window.location.hash) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+          
           await initialize();
           
           setTimeout(() => {
             onComplete?.();
-          }, 1500);
-        } else {
-          // No session yet, wait for auth state change
-          setMessage('Waiting for authentication...');
-          
-          const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-            if (event === 'SIGNED_IN' && newSession) {
-              setStatus('success');
-              setMessage('Sign in successful! Redirecting...');
-              await initialize();
-              subscription.unsubscribe();
-              setTimeout(() => {
-                onComplete?.();
-              }, 1500);
-            }
-          });
-
-          // Timeout after 30 seconds
-          setTimeout(() => {
-            subscription.unsubscribe();
-            if (status === 'processing') {
-              setStatus('error');
-              setMessage('Authentication timed out. Please try again.');
-            }
-          }, 30000);
+          }, 1000);
+          return;
         }
+
+        // If no session yet, wait for auth state change
+        console.log('AuthCallback: No session yet, listening for auth state changes...');
+        setMessage('Authenticating...');
+        
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          console.log('AuthCallback: Auth state changed:', event, session?.user?.email);
+          
+          if (event === 'SIGNED_IN' && session) {
+            setStatus('success');
+            setMessage('Sign in successful! Redirecting...');
+            
+            // Clear URL hash if present
+            if (window.location.hash) {
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            
+            await initialize();
+            subscription.unsubscribe();
+            
+            setTimeout(() => {
+              onComplete?.();
+            }, 1000);
+          } else if (event === 'TOKEN_REFRESHED' && session) {
+            // Token refreshed means we have a valid session
+            setStatus('success');
+            setMessage('Sign in successful! Redirecting...');
+            
+            await initialize();
+            subscription.unsubscribe();
+            
+            setTimeout(() => {
+              onComplete?.();
+            }, 1000);
+          }
+        });
+
+        // Also poll for session as a fallback (every 500ms for 15 seconds)
+        let attempts = 0;
+        const maxAttempts = 30;
+        
+        const pollInterval = setInterval(async () => {
+          attempts++;
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (session) {
+            console.log('AuthCallback: Session detected via polling');
+            clearInterval(pollInterval);
+            subscription.unsubscribe();
+            
+            setStatus('success');
+            setMessage('Sign in successful! Redirecting...');
+            
+            if (window.location.hash) {
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            
+            await initialize();
+            
+            setTimeout(() => {
+              onComplete?.();
+            }, 1000);
+          } else if (attempts >= maxAttempts) {
+            console.log('AuthCallback: Polling timed out');
+            clearInterval(pollInterval);
+            subscription.unsubscribe();
+            
+            setStatus('error');
+            setMessage('Authentication timed out. Please try again.');
+            
+            setTimeout(() => {
+              onComplete?.();
+            }, 3000);
+          }
+        }, 500);
       } catch (error) {
         console.error('Auth callback error:', error);
         setStatus('error');
@@ -110,7 +141,7 @@ function AuthCallback({ onComplete }) {
     };
 
     handleCallback();
-  }, [initialize, status, onComplete]);
+  }, [initialize, onComplete]);
 
   return (
     <div className="h-screen flex flex-col items-center justify-center bg-surface-dark">
