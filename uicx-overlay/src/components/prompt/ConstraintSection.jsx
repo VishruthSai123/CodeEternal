@@ -123,13 +123,13 @@ function ConstraintSection() {
   ];
 
   const colorClasses = {
-    teal: 'bg-accent-teal/20 border-accent-teal/50 text-accent-teal',
-    purple: 'bg-accent-purple/20 border-accent-purple/50 text-accent-purple',
-    blue: 'bg-blue-500/20 border-blue-500/50 text-blue-400',
-    yellow: 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400',
-    red: 'bg-red-500/20 border-red-500/50 text-red-400',
-    green: 'bg-green-500/20 border-green-500/50 text-green-400',
-    pink: 'bg-pink-500/20 border-pink-500/50 text-pink-400',
+    teal: { badge: 'bg-accent-teal/20 border-accent-teal/30 text-accent-teal', icon: 'text-accent-teal' },
+    purple: { badge: 'bg-accent-purple/20 border-accent-purple/30 text-accent-purple', icon: 'text-accent-purple' },
+    blue: { badge: 'bg-blue-500/20 border-blue-500/30 text-blue-400', icon: 'text-blue-400' },
+    yellow: { badge: 'bg-yellow-500/20 border-yellow-500/30 text-yellow-400', icon: 'text-yellow-400' },
+    red: { badge: 'bg-red-500/20 border-red-500/30 text-red-400', icon: 'text-red-400' },
+    green: { badge: 'bg-green-500/20 border-green-500/30 text-green-400', icon: 'text-green-400' },
+    pink: { badge: 'bg-pink-500/20 border-pink-500/30 text-pink-400', icon: 'text-pink-400' },
   };
 
   const activeCount = Object.values(constraints).filter(v => v === true).length;
@@ -138,7 +138,7 @@ function ConstraintSection() {
     <div className="space-y-4">
       {/* Framework Selection */}
       <div>
-        <label className="text-xs text-gray-500 mb-2 block">Framework / Language</label>
+        <label className="text-xs text-gray-400 mb-2 block">Framework / Language</label>
         <div className="flex flex-wrap gap-1.5">
           {frameworks.map((fw) => (
             <button
@@ -146,8 +146,8 @@ function ConstraintSection() {
               onClick={() => setFramework(fw.value)}
               className={`px-2.5 py-1.5 text-xs rounded-lg border transition-all flex items-center gap-1.5 ${
                 framework === fw.value
-                  ? 'bg-accent-teal/20 border-accent-teal/50 text-accent-teal'
-                  : 'bg-glass-hover border-glass-border text-gray-400 hover:text-white hover:border-gray-500'
+                  ? 'bg-accent-teal/20 border-accent-teal/40 text-accent-teal'
+                  : 'bg-surface-light/30 border-glass-border text-gray-300 hover:text-white hover:border-gray-500 hover:bg-glass-hover'
               }`}
             >
               <span>{fw.icon}</span>
@@ -159,7 +159,7 @@ function ConstraintSection() {
 
       {/* Style Preset Selection */}
       <div>
-        <label className="text-xs text-gray-500 mb-2 block">Design Style</label>
+        <label className="text-xs text-gray-400 mb-2 block">Design Style</label>
         <div className="flex flex-wrap gap-1.5">
           {stylePresets.map((style) => (
             <button
@@ -168,8 +168,8 @@ function ConstraintSection() {
               title={style.desc}
               className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${
                 stylePreset === style.value
-                  ? 'bg-accent-purple/20 border-accent-purple/50 text-accent-purple'
-                  : 'bg-glass-hover border-glass-border text-gray-400 hover:text-white hover:border-gray-500'
+                  ? 'bg-accent-purple/20 border-accent-purple/40 text-accent-purple'
+                  : 'bg-surface-light/30 border-glass-border text-gray-300 hover:text-white hover:border-gray-500 hover:bg-glass-hover'
               }`}
             >
               {style.label}
@@ -180,7 +180,7 @@ function ConstraintSection() {
 
       {/* Constraints Header */}
       <div className="flex items-center justify-between">
-        <label className="text-xs text-gray-500">
+        <label className="text-xs text-gray-400">
           Constraints <span className="text-accent-teal">({activeCount} active)</span>
         </label>
         <button
@@ -189,7 +189,7 @@ function ConstraintSection() {
               ? [] 
               : constraintCategories.map(c => c.id)
           )}
-          className="text-xs text-gray-500 hover:text-accent-teal transition-colors"
+          className="text-xs text-gray-400 hover:text-accent-teal transition-colors"
         >
           {expandedCategories.length === constraintCategories.length ? 'Collapse all' : 'Expand all'}
         </button>
@@ -203,40 +203,40 @@ function ConstraintSection() {
           const categoryActiveCount = category.options.filter(opt => constraints[opt.key]).length;
           
           return (
-            <div key={category.id} className="rounded-lg border border-glass-border overflow-hidden bg-surface-dark">
+            <div key={category.id} className="rounded-lg border border-glass-border overflow-hidden">
               {/* Category Header */}
               <button
                 onClick={() => toggleCategory(category.id)}
-                className="w-full flex items-center justify-between p-2.5 bg-glass-hover/30 hover:bg-glass-hover/50 transition-colors"
+                className="w-full flex items-center justify-between p-2.5 bg-surface-light/30 hover:bg-glass-hover transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <Icon size={14} className={`text-${category.color}-400`} style={{ color: `var(--${category.color}-400, currentColor)` }} />
-                  <span className="text-sm text-gray-300">{category.label}</span>
+                  <Icon size={14} className={colorClasses[category.color].icon} />
+                  <span className="text-sm text-gray-200">{category.label}</span>
                   {categoryActiveCount > 0 && (
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${colorClasses[category.color]}`}>
+                    <span className={`text-xs px-1.5 py-0.5 rounded border ${colorClasses[category.color].badge}`}>
                       {categoryActiveCount}
                     </span>
                   )}
                 </div>
                 {isExpanded ? (
-                  <ChevronDown size={14} className="text-gray-500" />
+                  <ChevronDown size={14} className="text-gray-400" />
                 ) : (
-                  <ChevronRight size={14} className="text-gray-500" />
+                  <ChevronRight size={14} className="text-gray-400" />
                 )}
               </button>
 
               {/* Category Options */}
               {isExpanded && (
-                <div className="p-2 space-y-1 bg-surface-dark/50">
+                <div className="p-2 space-y-1 border-t border-glass-border bg-surface-dark/80">
                   {category.options.map((option) => (
                     <label
                       key={option.key}
-                      className="flex items-start gap-2.5 p-1.5 rounded-md cursor-pointer hover:bg-glass-hover/50 transition-colors group"
+                      className="flex items-start gap-2.5 p-1.5 rounded-md cursor-pointer hover:bg-glass-hover transition-colors group"
                     >
                       <div
                         className={`w-4 h-4 mt-0.5 rounded border flex items-center justify-center flex-shrink-0 transition-all ${
                           constraints[option.key]
-                            ? `${colorClasses[category.color]}`
+                            ? `${colorClasses[category.color].badge}`
                             : 'bg-glass-hover border-glass-border group-hover:border-gray-500'
                         }`}
                         onClick={(e) => {
@@ -262,11 +262,11 @@ function ConstraintSection() {
       </div>
 
       {/* Max Lines Slider */}
-      <div className="p-3 rounded-lg border border-glass-border bg-glass-hover/30">
+      <div className="p-3 rounded-lg border border-glass-border bg-surface-light/30">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Settings size={14} className="text-gray-500" />
-            <label className="text-sm text-gray-300">Max Component Lines</label>
+            <Settings size={14} className="text-gray-400" />
+            <label className="text-sm text-gray-200">Max Component Lines</label>
           </div>
           <span className="text-sm font-medium text-accent-teal">{constraints.maxLines}</span>
         </div>
