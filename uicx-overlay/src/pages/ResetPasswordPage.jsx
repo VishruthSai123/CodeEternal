@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Lock, Eye, EyeOff, Loader2, CheckCircle, XCircle,
-  Minus, X, Pin, PinOff, RefreshCw, AlertCircle, ArrowRight
+  Minus, X, Pin, PinOff, AlertCircle, ArrowRight, Monitor
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
@@ -21,13 +21,22 @@ function ResetPasswordPage({ onComplete }) {
   const { isPinned, setIsPinned } = useAppStore();
   const handledRef = useRef(false);
 
-  // Window controls
+  // Detect if running in Electron (desktop) or browser (mobile/web)
+  const isElectron = !!window.electron;
+  const isMobile = !isElectron && (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    window.innerWidth < 768
+  );
+
+  // Window controls (desktop only)
   const handleMinimize = () => window.electron?.minimize();
   const handleClose = () => window.electron?.close();
   const handleTogglePin = () => window.electron?.togglePin();
 
-  // Sync pin state on mount
+  // Sync pin state on mount (desktop only)
   useEffect(() => {
+    if (!isElectron) return;
+    
     const syncPinState = async () => {
       if (window.electron?.getPinState) {
         const pinState = await window.electron.getPinState();
@@ -40,7 +49,7 @@ function ResetPasswordPage({ onComplete }) {
       setIsPinned(pinned);
     });
     return () => cleanup?.();
-  }, [setIsPinned]);
+  }, [setIsPinned, isElectron]);
 
   // Handle the password reset token from URL
   useEffect(() => {
@@ -50,10 +59,6 @@ function ResetPasswordPage({ onComplete }) {
     const handleResetToken = async () => {
       try {
         console.log('ResetPasswordPage: Processing reset link...');
-        console.log('ResetPasswordPage: Hash:', window.location.hash);
-        
-        // The reset link contains tokens in the URL hash
-        // Supabase will automatically process this with detectSessionInUrl: true
         
         // Check for errors in URL
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -63,10 +68,6 @@ function ResetPasswordPage({ onComplete }) {
         if (urlError) {
           throw new Error(errorDescription || urlError);
         }
-
-        // Check if we have a recovery token type
-        const type = hashParams.get('type');
-        console.log('ResetPasswordPage: Token type:', type);
 
         // Wait for Supabase to process the token and create a session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -79,16 +80,10 @@ function ResetPasswordPage({ onComplete }) {
           console.log('ResetPasswordPage: Session established for:', session.user?.email);
           setStatus('ready');
           setMessage(`Enter a new password for ${session.user?.email}`);
-          
-          // Clear the URL hash
           window.history.replaceState({}, document.title, window.location.pathname);
         } else {
           // If no session, listen for auth state changes
-          console.log('ResetPasswordPage: Waiting for session...');
-          
           const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log('ResetPasswordPage: Auth event:', event);
-            
             if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
               setStatus('ready');
               setMessage(`Enter a new password for ${session?.user?.email || 'your account'}`);
@@ -120,7 +115,6 @@ function ResetPasswordPage({ onComplete }) {
     setFormError('');
     clearError();
 
-    // Validation
     if (password.length < 6) {
       setFormError('Password must be at least 6 characters');
       return;
@@ -137,20 +131,215 @@ function ResetPasswordPage({ onComplete }) {
       setStatus('success');
       setMessage('Password updated successfully!');
       
-      // Reinitialize auth and redirect after delay
-      setTimeout(async () => {
-        await initialize();
-        onComplete?.();
-      }, 2000);
+      // Only redirect on desktop (Electron), not on mobile/web
+      if (isElectron) {
+        setTimeout(async () => {
+          await initialize();
+          onComplete?.();
+        }, 2000);
+      }
+      // On mobile, just stay on success page - no redirect
     }
   };
 
   const handleBackToLogin = () => {
-    // Clear URL and go back to login
     window.history.replaceState({}, document.title, window.location.pathname);
-    onComplete?.();
+    if (isElectron) {
+      onComplete?.();
+    }
+    // On mobile, just clear URL but stay on page
   };
 
+  // Mobile/Web Layout
+  if (isMobile || !isElectron) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#16213e]">
+        {/* Simple Header */}
+        <header className="flex items-center justify-center py-6 px-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <img src="./icon-rounded.png" alt="Code Eternal" className="w-8 h-8 object-cover rounded-lg" />
+            <h1 className="text-lg font-bold text-white">Code Eternal</h1>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-1 flex items-center justify-center p-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-sm"
+          >
+            {/* Logo */}
+            <div className="text-center mb-8">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', delay: 0.1 }}
+                className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 overflow-hidden bg-white/5 border border-white/10"
+              >
+                <img src="./icon-rounded.png" alt="Code Eternal" className="w-full h-full object-cover" />
+              </motion.div>
+              <h2 className="text-2xl font-bold text-white mb-2">Reset Password</h2>
+            </div>
+
+            {/* Card */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl">
+              {/* Loading State */}
+              {status === 'loading' && (
+                <div className="text-center py-8">
+                  <Loader2 className="w-12 h-12 text-[#14F4C9] animate-spin mx-auto mb-4" />
+                  <p className="text-gray-400">{message}</p>
+                </div>
+              )}
+
+              {/* Error State */}
+              {status === 'error' && (
+                <div className="text-center py-8">
+                  <XCircle className="w-14 h-14 text-red-400 mx-auto mb-4" />
+                  <p className="text-red-400 mb-6">{message}</p>
+                  <p className="text-gray-500 text-sm">
+                    Please request a new password reset link from the desktop app.
+                  </p>
+                </div>
+              )}
+
+              {/* Success State - Mobile stays here, no redirect */}
+              {status === 'success' && (
+                <div className="text-center py-8">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring' }}
+                  >
+                    <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
+                  </motion.div>
+                  <h3 className="text-xl font-bold text-white mb-2">Password Updated!</h3>
+                  <p className="text-green-400 mb-6">{message}</p>
+                  
+                  <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <div className="flex items-center justify-center gap-2 mb-3">
+                      <Monitor size={20} className="text-[#14F4C9]" />
+                      <span className="text-white font-medium">Continue on Desktop</span>
+                    </div>
+                    <p className="text-gray-400 text-sm">
+                      You can now log in with your new password in the Code Eternal desktop app.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Ready - Show Password Form */}
+              {status === 'ready' && (
+                <>
+                  <p className="text-gray-400 text-center mb-6 text-sm">{message}</p>
+
+                  {/* Error Messages */}
+                  <AnimatePresence>
+                    {(formError || error) && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 
+                                   flex items-center gap-2 text-red-400 text-sm"
+                      >
+                        <AlertCircle size={16} />
+                        {formError || error}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* New Password */}
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1.5">New Password</label>
+                      <div className="relative">
+                        <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/10 rounded-xl
+                                     text-white placeholder-gray-500 focus:outline-none focus:border-[#14F4C9]/50
+                                     transition-colors"
+                          required
+                          minLength={6}
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                        >
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Confirm Password */}
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1.5">Confirm Password</label>
+                      <div className="relative">
+                        <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                        <input
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/10 rounded-xl
+                                     text-white placeholder-gray-500 focus:outline-none focus:border-[#14F4C9]/50
+                                     transition-colors"
+                          required
+                          minLength={6}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                        >
+                          {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full py-3 bg-gradient-to-r from-[#14F4C9] to-[#3B82F6] 
+                                 text-gray-900 font-semibold rounded-xl
+                                 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed
+                                 flex items-center justify-center gap-2"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        <>
+                          Update Password
+                          <ArrowRight size={18} />
+                        </>
+                      )}
+                    </button>
+                  </form>
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            <p className="text-center text-xs text-gray-500 mt-6">
+              Code Eternal - AI-Powered Prompt Builder
+            </p>
+          </motion.div>
+        </main>
+      </div>
+    );
+  }
+
+  // Desktop (Electron) Layout - Original design with window controls
   return (
     <div className="h-screen flex flex-col bg-surface-dark rounded-2xl overflow-hidden border border-glass-border">
       {/* Title Bar */}
