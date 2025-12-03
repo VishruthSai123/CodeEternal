@@ -11,7 +11,7 @@ function AuthCallback({ onComplete }) {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Get the URL hash/query parameters
+        // Get the URL hash parameters (implicit flow returns tokens in hash)
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const queryParams = new URLSearchParams(window.location.search);
         
@@ -23,28 +23,33 @@ function AuthCallback({ onComplete }) {
           throw new Error(errorDescription || error);
         }
 
-        // Check if we have a code (PKCE flow) - need to exchange it
-        const code = queryParams.get('code');
+        // Check for access_token in hash (implicit flow)
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
         
-        if (code) {
-          console.log('PKCE code detected, exchanging for session...');
-          // Exchange the code for a session
-          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (accessToken) {
+          console.log('Access token found in URL hash, setting session...');
           
-          if (exchangeError) {
-            throw exchangeError;
+          // Set session from tokens
+          const { data, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          });
+          
+          if (sessionError) {
+            throw sessionError;
           }
           
           if (data.session) {
-            console.log('Session obtained from code exchange');
+            console.log('Session set successfully');
             setStatus('success');
             setMessage('Sign in successful! Redirecting...');
             
-            // Re-initialize auth store with the new session
-            await initialize();
-            
-            // Clear URL and complete
+            // Clear URL hash
             window.history.replaceState({}, document.title, window.location.pathname);
+            
+            // Re-initialize auth store
+            await initialize();
             
             setTimeout(() => {
               onComplete?.();
@@ -53,7 +58,7 @@ function AuthCallback({ onComplete }) {
           }
         }
 
-        // Fallback: Check if session already exists (token in hash)
+        // Fallback: Check if session already exists
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -63,19 +68,15 @@ function AuthCallback({ onComplete }) {
         if (session) {
           setStatus('success');
           setMessage('Sign in successful! Redirecting...');
-          
-          // Re-initialize auth store with the new session
           await initialize();
           
-          // Complete after a short delay
           setTimeout(() => {
             onComplete?.();
           }, 1500);
         } else {
-          // No session yet, wait for it
+          // No session yet, wait for auth state change
           setMessage('Waiting for authentication...');
           
-          // Listen for auth state change
           const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
             if (event === 'SIGNED_IN' && newSession) {
               setStatus('success');
@@ -102,7 +103,6 @@ function AuthCallback({ onComplete }) {
         setStatus('error');
         setMessage(error.message || 'Authentication failed. Please try again.');
         
-        // Go back to auth page after showing error
         setTimeout(() => {
           onComplete?.();
         }, 3000);

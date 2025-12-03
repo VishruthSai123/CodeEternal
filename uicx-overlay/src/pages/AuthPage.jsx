@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Mail, Lock, User, Eye, EyeOff, Sparkles, 
   ArrowRight, Github, Chrome, AlertCircle, Check,
-  Minus, X, Pin, PinOff, RefreshCw, ExternalLink, Loader2
+  Minus, X, Pin, PinOff, RefreshCw, ExternalLink
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useAppStore } from '../stores/appStore';
@@ -18,7 +18,7 @@ function AuthPage() {
   });
   const [successMessage, setSuccessMessage] = useState('');
 
-  const { signIn, signUp, signInWithOAuth, resetPassword, isLoading, error, clearError, oauthPending, clearOAuthPending } = useAuthStore();
+  const { signIn, signUp, signInWithOAuth, resetPassword, isLoading, error, clearError } = useAuthStore();
   const { isPinned, setIsPinned } = useAppStore();
 
   // Window controls
@@ -177,38 +177,9 @@ function AuthPage() {
           layout
           className="glass-panel p-6 rounded-2xl"
         >
-          {/* OAuth Pending Message */}
-          <AnimatePresence>
-            {oauthPending && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mb-4 p-4 rounded-lg bg-accent-teal/10 border border-accent-teal/30"
-              >
-                <div className="flex items-center gap-3 text-accent-teal">
-                  <Loader2 size={20} className="animate-spin" />
-                  <div>
-                    <p className="text-sm font-medium">Complete sign in your browser</p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      A browser window should have opened. Return here after signing in.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={clearOAuthPending}
-                  className="mt-3 text-xs text-gray-500 hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           {/* Error Message */}
           <AnimatePresence>
-            {error && !oauthPending && (
+            {error && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}

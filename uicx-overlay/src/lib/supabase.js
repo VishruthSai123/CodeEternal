@@ -69,6 +69,9 @@ export const clearAuthStorage = () => {
   }
 };
 
+// Check if running in Electron
+const isElectron = typeof window !== 'undefined' && Boolean(window.electron);
+
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabaseAnonKey || 'placeholder-key',
@@ -79,7 +82,9 @@ export const supabase = createClient(
       detectSessionInUrl: true,
       storage: customStorage,
       storageKey: AUTH_STORAGE_KEY,
-      flowType: 'pkce',
+      // Use implicit flow for web (works with cross-origin OAuth)
+      // PKCE only works when OAuth starts and ends in the same browser context
+      flowType: 'implicit',
     },
     global: {
       headers: {

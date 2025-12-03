@@ -48,7 +48,6 @@ export const useAuthStore = create(
       isLoading: true,
       isAuthenticated: false,
       error: null,
-      oauthPending: false, // True when waiting for OAuth in external browser
 
       // Permissions (from profile)
       canAddSnippets: false,
@@ -59,9 +58,6 @@ export const useAuthStore = create(
       lastActivity: null,
       isOnline: navigator.onLine,
       sessionExpiresAt: null,
-
-      // Clear OAuth pending state
-      clearOAuthPending: () => set({ oauthPending: false }),
 
       // Set online status
       setOnlineStatus: (isOnline) => set({ isOnline }),
@@ -621,120 +617,32 @@ export const useAuthStore = create(
         try {
           set({ isLoading: true, error: null });
 
-          // Determine the correct redirect URL
-          // For Electron: Use the production web URL for OAuth callback
-          // For Web: Use current origin
-          const isElectron = Boolean(window.electron);
-          const productionUrl = 'https://codeeternal.vercel.app';
-          
-          // For OAuth, always redirect to the web app which will handle the token
-          const redirectUrl = isElectron 
-            ? `${productionUrl}/auth/callback`
-            : `${window.location.origin}/auth/callback`;
+          // For OAuth, always use the current origin as redirect
+          // This works for both web and Electron (which loads from Vercel)
+          const redirectUrl = window.location.origin;
 
           console.log(`OAuth ${provider} login, redirect to: ${redirectUrl}`);
 
-          const { data, error } = await supabase.auth.signInWithOAuth({
+          // Let Supabase handle the OAuth flow normally
+          // It will redirect the current page to the OAuth provider
+          // and then back to our app with tokens in the URL hash
+          const { error } = await supabase.auth.signInWithOAuth({
             provider,
             options: {
               redirectTo: redirectUrl,
-              skipBrowserRedirect: isElectron, // Don't redirect in Electron, we'll handle it
-              queryParams: {
-                access_type: 'offline', // Get refresh token for Google
-                prompt: 'consent', // Always show consent screen
-              },
+              // Don't skip redirect - let it navigate in the same window
             },
           });
 
           if (error) throw error;
 
-          // In Electron, open the OAuth URL in system browser
-          if (isElectron && data?.url) {
-            console.log('Opening OAuth in system browser:', data.url);
-            
-            // Try to open external URL
-            const result = await window.electron?.openExternal?.(data.url);
-            console.log('openExternal result:', result);
-            
-            // Show info message to user (not an error)
-            set({ 
-              isLoading: false, 
-              error: null,
-              oauthPending: true, // New flag for pending OAuth
-            });
-            
-            // Start polling for session (user will complete OAuth in browser)
-            get().pollForOAuthSession();
-            
-            return { success: true, pending: true };
-          }
-
-          // Web: OAuth redirects, so we don't need to update state here
+          // OAuth will redirect the page, no further action needed
           return { success: true };
         } catch (error) {
           console.error('OAuth error:', error);
           set({ error: error.message, isLoading: false });
           return { success: false, error: error.message };
         }
-      },
-
-      // Poll for OAuth session completion (Electron only)
-      pollForOAuthSession: async () => {
-        const maxAttempts = 60; // 2 minutes
-        let attempts = 0;
-
-        const poll = async () => {
-          attempts++;
-          
-          try {
-            const { data: { session }, error } = await supabase.auth.getSession();
-            
-            if (session) {
-              console.log('OAuth session detected!');
-              
-              // Fetch profile
-              const profile = await fetchProfileDirect(session.user.id);
-              
-              set({
-                user: session.user,
-                profile,
-                session,
-                isAuthenticated: true,
-                isLoading: false,
-                canAddSnippets: profile?.can_add_snippets || false,
-                isAdmin: profile?.is_admin || false,
-                sessionStatus: 'active',
-                sessionExpiresAt: session.expires_at * 1000,
-                lastActivity: Date.now(),
-                error: null,
-                oauthPending: false, // Clear pending state
-              });
-
-              get().scheduleSessionRefresh(session);
-              get().startKeepAlive();
-              
-              return;
-            }
-
-            if (attempts < maxAttempts) {
-              setTimeout(poll, 2000); // Poll every 2 seconds
-            } else {
-              set({ 
-                isLoading: false, 
-                error: 'OAuth timed out. Please try again.',
-                oauthPending: false,
-              });
-            }
-          } catch (err) {
-            console.error('OAuth poll error:', err);
-            if (attempts < maxAttempts) {
-              setTimeout(poll, 2000);
-            }
-          }
-        };
-
-        // Start polling after a short delay
-        setTimeout(poll, 3000);
       },
 
       // Sign out - THIS IS THE ONLY WAY SESSION SHOULD END
