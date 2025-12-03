@@ -623,6 +623,21 @@ export const useAuthStore = create(
 
           console.log(`OAuth ${provider} login, redirect to: ${redirectUrl}`);
 
+          // Build query params based on provider
+          // Google: Force account selection screen every time
+          // GitHub: Allow re-authentication
+          const queryParams = {};
+          
+          if (provider === 'google') {
+            // prompt=select_account: Always show Google account picker
+            // access_type=offline: Get refresh token for long-lived sessions
+            queryParams.prompt = 'select_account';
+            queryParams.access_type = 'offline';
+          } else if (provider === 'github') {
+            // Force GitHub to show the authorization screen
+            queryParams.allow_signup = 'true';
+          }
+
           // Let Supabase handle the OAuth flow normally
           // It will redirect the current page to the OAuth provider
           // and then back to our app with tokens in the URL hash
@@ -630,7 +645,7 @@ export const useAuthStore = create(
             provider,
             options: {
               redirectTo: redirectUrl,
-              // Don't skip redirect - let it navigate in the same window
+              queryParams,
             },
           });
 
