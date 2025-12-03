@@ -12,6 +12,7 @@ import BrowseSnippets from './pages/BrowseSnippets';
 import BrowseTemplates from './pages/BrowseTemplates';
 import SettingsPage from './pages/SettingsPage';
 import AuthCallback from './pages/AuthCallback';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import CreateProjectModal from './components/CreateProjectModal';
 import LoadingScreen from './components/LoadingScreen';
 import SessionStatus from './components/SessionStatus';
@@ -34,6 +35,16 @@ const isOAuthCallback = () => {
          hash.includes('error=');
 };
 
+// Check if current URL is a password reset callback
+const isPasswordResetCallback = () => {
+  const path = window.location.pathname;
+  const hash = window.location.hash;
+  
+  // Check for reset-password path or recovery type in hash
+  return path.includes('/reset-password') || 
+         hash.includes('type=recovery');
+};
+
 function App() {
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [showBrowseSnippets, setShowBrowseSnippets] = useState(false);
@@ -41,6 +52,7 @@ function App() {
   const [browseTemplateCategory, setBrowseTemplateCategory] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [isOAuthProcessing, setIsOAuthProcessing] = useState(isOAuthCallback());
+  const [isPasswordResetProcessing, setIsPasswordResetProcessing] = useState(isPasswordResetCallback());
   
   const { initializeApp, activeTab, setActiveTab } = useAppStore();
   const { 
@@ -64,6 +76,12 @@ function App() {
     // Clear URL hash/params and OAuth processing state
     window.history.replaceState({}, document.title, window.location.pathname);
     setIsOAuthProcessing(false);
+  };
+
+  // Handle password reset completion
+  const handlePasswordResetComplete = () => {
+    window.history.replaceState({}, document.title, window.location.pathname);
+    setIsPasswordResetProcessing(false);
   };
 
   useEffect(() => {
@@ -185,6 +203,11 @@ function App() {
   // OAuth callback processing
   if (isOAuthProcessing) {
     return <AuthCallback onComplete={handleOAuthComplete} />;
+  }
+
+  // Password reset processing
+  if (isPasswordResetProcessing) {
+    return <ResetPasswordPage onComplete={handlePasswordResetComplete} />;
   }
 
   // Loading state

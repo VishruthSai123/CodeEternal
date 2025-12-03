@@ -722,19 +722,42 @@ export const useAuthStore = create(
         }
       },
 
-      // Reset password
+      // Reset password (send email)
       resetPassword: async (email) => {
         try {
           set({ isLoading: true, error: null });
 
+          // For Electron app, we use the production URL as the redirect
+          // The app will detect this on load and show the password reset form
+          const redirectUrl = 'https://codeeternal.vercel.app/reset-password';
+          
           const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/reset-password`,
+            redirectTo: redirectUrl,
           });
 
           if (error) throw error;
 
           set({ isLoading: false });
           return { success: true };
+        } catch (error) {
+          set({ error: error.message, isLoading: false });
+          return { success: false, error: error.message };
+        }
+      },
+
+      // Update password (after reset link clicked)
+      updatePassword: async (newPassword) => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const { data, error } = await supabase.auth.updateUser({
+            password: newPassword,
+          });
+
+          if (error) throw error;
+
+          set({ isLoading: false });
+          return { success: true, data };
         } catch (error) {
           set({ error: error.message, isLoading: false });
           return { success: false, error: error.message };
