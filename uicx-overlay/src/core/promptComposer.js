@@ -67,11 +67,47 @@ const SECTION_TEMPLATES = {
 
   constraints: (constraints) => {
     const items = [];
+    
+    // Code Style
     if (constraints.noInlineStyles) items.push('No inline styles - use CSS classes');
     if (constraints.useTailwind) items.push('Use Tailwind CSS utility classes');
-    if (constraints.maxLines) items.push(`Keep component under ${constraints.maxLines} lines`);
+    if (constraints.useTypeScript) items.push('Use TypeScript with proper type annotations');
+    if (constraints.strictTypes) items.push('Use strict typing - avoid any, use proper interfaces');
+    if (constraints.modularCode) items.push('Write modular, reusable code - split into smaller components');
+    if (constraints.documentedCode) items.push('Add comments for complex logic and JSDoc for functions');
+    
+    // Accessibility
     if (constraints.ariaRequired) items.push('Include ARIA accessibility attributes');
+    if (constraints.wcagCompliance) items.push('Follow WCAG 2.1 accessibility guidelines');
+    if (constraints.keyboardNavigation) items.push('Ensure full keyboard navigation support');
+    
+    // Responsive & Theme
     if (constraints.mobileFirst) items.push('Use mobile-first responsive design');
+    if (constraints.darkModeSupport) items.push('Support both light and dark themes');
+    if (constraints.rtlSupport) items.push('Support RTL (right-to-left) languages');
+    
+    // Performance
+    if (constraints.lazyLoading) items.push('Implement lazy loading for heavy components');
+    if (constraints.codeSpitting) items.push('Use code splitting for better bundle optimization');
+    if (constraints.memoization) items.push('Use React.memo, useMemo, useCallback for optimization');
+    
+    // Security
+    if (constraints.inputValidation) items.push('Validate and sanitize all user inputs');
+    if (constraints.xssPrevention) items.push('Prevent XSS - sanitize dynamic content');
+    if (constraints.csrfProtection) items.push('Include CSRF protection for forms');
+    
+    // Data Handling
+    if (constraints.errorHandling) items.push('Implement proper error handling and error boundaries');
+    if (constraints.loadingStates) items.push('Show loading states and skeleton screens');
+    if (constraints.optimisticUpdates) items.push('Use optimistic updates for better UX');
+    if (constraints.testCoverage) items.push('Structure code for easy unit testing');
+    
+    // Animation
+    if (constraints.smoothTransitions) items.push('Add smooth CSS transitions and animations');
+    if (constraints.reduceMotion) items.push('Respect prefers-reduced-motion preference');
+    
+    // Max Lines
+    if (constraints.maxLines) items.push(`Keep component under ${constraints.maxLines} lines`);
     
     if (items.length === 0) return '';
     
