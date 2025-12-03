@@ -7,14 +7,15 @@ const SESSION_REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes in ms
 let refreshTimer = null;
 let keepAliveTimer = null;
 
-// Flag to track if user intentionally logged out - ONLY then should session be cleared
-let isIntentionalLogout = false;
-
-// Helper function to fetch profile using direct REST API (bypasses Supabase client issues)
-const fetchProfileDirect = async (userId) => {
+// Helper function to fetch profile using direct REST API
+// Uses session access token for proper authentication
+const fetchProfileDirect = async (userId, accessToken = null) => {
   try {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    // Use access token if provided, otherwise fall back to anon key
+    const authToken = accessToken || supabaseKey;
     
     const response = await fetch(
       `${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=*`,
@@ -22,7 +23,7 @@ const fetchProfileDirect = async (userId) => {
         method: 'GET',
         headers: {
           'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
         },
       }
@@ -48,6 +49,9 @@ export const useAuthStore = create(
       isLoading: true,
       isAuthenticated: false,
       error: null,
+      
+      // Track intentional logout within the store
+      isIntentionalLogout: false,
 
       // Permissions (from profile)
       canAddSnippets: false,
@@ -130,35 +134,16 @@ export const useAuthStore = create(
 
       // Refresh profile data (to get updated admin status, etc.)
       refreshProfile: async () => {
-        const { user } = get();
+        const { user, session } = get();
         if (!user) return { success: false, error: 'Not authenticated' };
 
         console.log('Refreshing profile for user:', user.id);
 
         try {
-          // Direct fetch to bypass any client issues
-          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-          const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+          // Use session access token for proper authentication
+          const accessToken = session?.access_token;
+          const profile = await fetchProfileDirect(user.id, accessToken);
           
-          const response = await fetch(
-            `${supabaseUrl}/rest/v1/profiles?id=eq.${user.id}&select=*`,
-            {
-              method: 'GET',
-              headers: {
-                'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`,
-                'Content-Type': 'application/json',
-              },
-            }
-          );
-
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-
-          const profiles = await response.json();
-          const profile = profiles[0];
-
           console.log('Profile fetched:', profile);
 
           if (profile) {
@@ -275,46 +260,47 @@ export const useAuthStore = create(
             }
           }
 
-          // No session from Supabase - try to recover from persisted Zustand state
-          // This handles cases where Supabase storage was cleared but Zustand wasn't
+          // No valid session from Supabase
+          // Clear any stale persisted state to prevent confusion
           const persistedState = get();
           if (persistedState.isAuthenticated && persistedState.user) {
-            console.log('No Supabase session, but have persisted auth state - attempting recovery...');
+            console.log('No Supabase session, but have stale persisted auth state - attempting one more recovery...');
             
-            // Try one more time to get session
+            // Try one more time to get/refresh session
             try {
+              // First try refresh
+              const { data: refreshData } = await supabase.auth.refreshSession();
+              if (refreshData?.session) {
+                console.log('Session recovered via refresh');
+                return refreshData.session;
+              }
+              
+              // Then try getSession
               const { data: retryData } = await supabase.auth.getSession();
               if (retryData?.session) {
                 console.log('Session recovered on retry');
                 return retryData.session;
               }
             } catch (e) {
-              console.warn('Session recovery retry failed:', e);
+              console.warn('Session recovery failed:', e);
             }
             
-            // Return a pseudo-session to keep user "logged in"
-            // The app will work in degraded mode
-            console.log('Returning persisted user state as fallback');
-            return {
-              user: persistedState.user,
-              expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour fake expiry
-              access_token: null, // No valid token
-              refresh_token: null,
-            };
+            // No valid session - user needs to re-login
+            // Don't return fake session, return null so initialize() handles it properly
+            console.log('Could not recover session - user needs to re-authenticate');
           }
 
           return null;
         } catch (error) {
           console.error('Error restoring session:', error);
-          // Check persisted state as fallback
-          const persistedState = get();
-          if (persistedState.isAuthenticated && persistedState.user) {
-            return {
-              user: persistedState.user,
-              expires_at: Math.floor(Date.now() / 1000) + 3600,
-              access_token: null,
-              refresh_token: null,
-            };
+          // On error, try one more refresh attempt
+          try {
+            const { data: refreshData } = await supabase.auth.refreshSession();
+            if (refreshData?.session) {
+              return refreshData.session;
+            }
+          } catch (e) {
+            console.warn('Final refresh attempt failed:', e);
           }
           return null;
         }
@@ -542,8 +528,8 @@ export const useAuthStore = create(
 
           // If email confirmation is disabled, user is logged in immediately
           if (data.user && data.session) {
-            // Fetch profile using direct REST API
-            const profile = await fetchProfileDirect(data.user.id);
+            // Fetch profile using session access token
+            const profile = await fetchProfileDirect(data.user.id, data.session.access_token);
 
             set({
               user: data.user,
@@ -584,8 +570,8 @@ export const useAuthStore = create(
 
           if (error) throw error;
 
-          // Fetch profile using direct REST API (bypasses client issues)
-          const profile = await fetchProfileDirect(data.user.id);
+          // Fetch profile using session access token
+          const profile = await fetchProfileDirect(data.user.id, data.session.access_token);
 
           set({
             user: data.user,
@@ -664,7 +650,7 @@ export const useAuthStore = create(
       signOut: async () => {
         try {
           // Mark as intentional logout FIRST - this is the ONLY way to truly end session
-          isIntentionalLogout = true;
+          set({ isIntentionalLogout: true });
 
           // Stop all timers immediately
           get().stopKeepAlive();
@@ -766,8 +752,8 @@ export const useAuthStore = create(
 
       // Clear all cache and logout (nuclear option)
       clearCacheAndLogout: () => {
-        // Mark as intentional logout
-        isIntentionalLogout = true;
+        // Mark as intentional logout in store
+        useAuthStore.setState({ isIntentionalLogout: true });
         
         // Stop all timers
         get().stopKeepAlive();
@@ -792,14 +778,19 @@ export const useAuthStore = create(
     {
       name: 'code-eternal-auth-state',
       partialize: (state) => ({
-        // Persist full auth state for productivity app - never lose session
+        // Only persist non-sensitive data for session restoration
+        // Permissions (isAdmin, canAddSnippets) are always fetched fresh from server
         isAuthenticated: state.isAuthenticated,
         lastActivity: state.lastActivity,
-        user: state.user,
-        profile: state.profile,
+        // Only persist minimal user info for display during loading
+        user: state.user ? { 
+          id: state.user.id, 
+          email: state.user.email,
+          // Don't persist full user metadata
+        } : null,
         sessionExpiresAt: state.sessionExpiresAt,
-        canAddSnippets: state.canAddSnippets,
-        isAdmin: state.isAdmin,
+        // Don't persist isIntentionalLogout - it's runtime only
+        // Don't persist isAdmin or canAddSnippets - always fetch from server
       }),
     }
   )
@@ -813,8 +804,8 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   switch (event) {
     case 'SIGNED_IN':
       if (session?.user) {
-        // Fetch profile using direct REST API
-        const profile = await fetchProfileDirect(session.user.id);
+        // Fetch profile using session access token
+        const profile = await fetchProfileDirect(session.user.id, session.access_token);
 
         useAuthStore.setState({
           user: session.user,
@@ -838,8 +829,12 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     case 'SIGNED_OUT':
       // ONLY clear state if user intentionally logged out
       // For a productivity app, we NEVER want the session to expire automatically
-      if (isIntentionalLogout) {
+      const storeState = useAuthStore.getState();
+      if (storeState.isIntentionalLogout) {
         console.log('Intentional logout detected, clearing auth state');
+        
+        // Reset the flag
+        useAuthStore.setState({ isIntentionalLogout: false });
         
         // Clear refresh timer
         if (refreshTimer) {

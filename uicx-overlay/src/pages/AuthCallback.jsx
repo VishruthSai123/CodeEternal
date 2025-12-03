@@ -8,6 +8,7 @@ function AuthCallback({ onComplete }) {
   const [message, setMessage] = useState('Completing sign in...');
   const { initialize } = useAuthStore();
   const handledRef = useRef(false);
+  const cleanupRef = useRef({ subscription: null, pollInterval: null });
 
   useEffect(() => {
     // Prevent double execution
@@ -63,6 +64,12 @@ function AuthCallback({ onComplete }) {
           console.log('AuthCallback: Auth state changed:', event, session?.user?.email);
           
           if (event === 'SIGNED_IN' && session) {
+            // Clear poll interval if running
+            if (cleanupRef.current.pollInterval) {
+              clearInterval(cleanupRef.current.pollInterval);
+              cleanupRef.current.pollInterval = null;
+            }
+            
             setStatus('success');
             setMessage('Sign in successful! Redirecting...');
             
@@ -73,23 +80,34 @@ function AuthCallback({ onComplete }) {
             
             await initialize();
             subscription.unsubscribe();
+            cleanupRef.current.subscription = null;
             
             setTimeout(() => {
               onComplete?.();
             }, 1000);
           } else if (event === 'TOKEN_REFRESHED' && session) {
+            // Clear poll interval if running
+            if (cleanupRef.current.pollInterval) {
+              clearInterval(cleanupRef.current.pollInterval);
+              cleanupRef.current.pollInterval = null;
+            }
+            
             // Token refreshed means we have a valid session
             setStatus('success');
             setMessage('Sign in successful! Redirecting...');
             
             await initialize();
             subscription.unsubscribe();
+            cleanupRef.current.subscription = null;
             
             setTimeout(() => {
               onComplete?.();
             }, 1000);
           }
         });
+        
+        // Store subscription for cleanup
+        cleanupRef.current.subscription = subscription;
 
         // Also poll for session as a fallback (every 500ms for 15 seconds)
         let attempts = 0;
@@ -102,7 +120,12 @@ function AuthCallback({ onComplete }) {
           if (session) {
             console.log('AuthCallback: Session detected via polling');
             clearInterval(pollInterval);
-            subscription.unsubscribe();
+            cleanupRef.current.pollInterval = null;
+            
+            if (cleanupRef.current.subscription) {
+              cleanupRef.current.subscription.unsubscribe();
+              cleanupRef.current.subscription = null;
+            }
             
             setStatus('success');
             setMessage('Sign in successful! Redirecting...');
@@ -119,7 +142,12 @@ function AuthCallback({ onComplete }) {
           } else if (attempts >= maxAttempts) {
             console.log('AuthCallback: Polling timed out');
             clearInterval(pollInterval);
-            subscription.unsubscribe();
+            cleanupRef.current.pollInterval = null;
+            
+            if (cleanupRef.current.subscription) {
+              cleanupRef.current.subscription.unsubscribe();
+              cleanupRef.current.subscription = null;
+            }
             
             setStatus('error');
             setMessage('Authentication timed out. Please try again.');
@@ -129,6 +157,10 @@ function AuthCallback({ onComplete }) {
             }, 3000);
           }
         }, 500);
+        
+        // Store poll interval for cleanup
+        cleanupRef.current.pollInterval = pollInterval;
+        
       } catch (error) {
         console.error('Auth callback error:', error);
         setStatus('error');
@@ -141,6 +173,16 @@ function AuthCallback({ onComplete }) {
     };
 
     handleCallback();
+    
+    // Cleanup function to prevent memory leaks
+    return () => {
+      if (cleanupRef.current.pollInterval) {
+        clearInterval(cleanupRef.current.pollInterval);
+      }
+      if (cleanupRef.current.subscription) {
+        cleanupRef.current.subscription.unsubscribe();
+      }
+    };
   }, [initialize, onComplete]);
 
   return (
