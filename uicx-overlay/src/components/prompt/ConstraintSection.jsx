@@ -203,11 +203,11 @@ function ConstraintSection() {
           const categoryActiveCount = category.options.filter(opt => constraints[opt.key]).length;
           
           return (
-            <div key={category.id} className="rounded-lg border border-glass-border overflow-hidden">
+            <div key={category.id} className="rounded-lg border border-glass-border overflow-hidden bg-surface-dark">
               {/* Category Header */}
               <button
                 onClick={() => toggleCategory(category.id)}
-                className="w-full flex items-center justify-between p-2.5 bg-glass-hover/50 hover:bg-glass-hover transition-colors"
+                className="w-full flex items-center justify-between p-2.5 bg-glass-hover/30 hover:bg-glass-hover/50 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <Icon size={14} className={`text-${category.color}-400`} style={{ color: `var(--${category.color}-400, currentColor)` }} />
