@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Mail, Lock, User, Eye, EyeOff, Sparkles, 
   ArrowRight, Github, Chrome, AlertCircle, Check,
-  Minus, X, Pin, PinOff, RefreshCw, ExternalLink
+  Minus, X, Pin, PinOff, RefreshCw, ExternalLink, Send
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useAppStore } from '../stores/appStore';
@@ -17,9 +17,21 @@ function AuthPage() {
     displayName: '',
   });
   const [successMessage, setSuccessMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   const { signIn, signUp, signInWithOAuth, resetPassword, isLoading, error, clearError } = useAuthStore();
   const { isPinned, setIsPinned } = useAppStore();
+
+  // Auto-hide toast after 4 seconds
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => {
+        setShowToast(false);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
 
   // Window controls
   const handleMinimize = () => window.electron?.minimize();
@@ -71,14 +83,19 @@ function AuthPage() {
       if (result.success) {
         if (result.needsConfirmation) {
           setSuccessMessage('Check your email to confirm your account!');
+          setToastMessage('✉️ Confirmation email sent!');
+          setShowToast(true);
           setMode('login');
         }
       }
     } else if (mode === 'forgot') {
       const result = await resetPassword(formData.email);
       if (result.success) {
-        setSuccessMessage('Password reset link sent to your email!');
+        setToastMessage('✉️ Password reset link sent to your email!');
+        setShowToast(true);
+        setSuccessMessage('Check your email and click the reset link.');
         setMode('login');
+        setFormData(prev => ({ ...prev, email: '', password: '' }));
       }
     }
   };
@@ -406,6 +423,32 @@ function AuthPage() {
           </motion.div>
         </div>
       </div>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+          >
+            <div className="flex items-center gap-3 px-5 py-3 rounded-xl 
+                            bg-gradient-to-r from-accent-teal/20 to-accent-blue/20
+                            border border-accent-teal/40 backdrop-blur-xl
+                            shadow-lg shadow-accent-teal/20">
+              <Send size={18} className="text-accent-teal" />
+              <span className="text-white font-medium">{toastMessage}</span>
+              <button
+                onClick={() => setShowToast(false)}
+                className="ml-2 text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

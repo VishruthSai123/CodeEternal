@@ -210,8 +210,9 @@ function App() {
     return <ResetPasswordPage onComplete={handlePasswordResetComplete} />;
   }
 
-  // Loading state
-  if (authLoading) {
+  // Loading state - only show if not on auth page already
+  // This prevents showing loading screen during login/signup/forgot password actions
+  if (authLoading && isAuthenticated) {
     return <LoadingScreen status="initializing" onClearCache={handleClearCache} />;
   }
 
