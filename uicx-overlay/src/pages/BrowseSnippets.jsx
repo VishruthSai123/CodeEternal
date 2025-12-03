@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Grid, List, Filter, X, ChevronLeft, Code,
-  Minus, Pin, PinOff, Sparkles, RefreshCw
+  Minus, Pin, PinOff, Sparkles, RefreshCw, Plus
 } from 'lucide-react';
 import {
   useSnippetStore,
@@ -11,8 +11,10 @@ import {
   SNIPPET_TAGS,
 } from '../stores/snippetStore';
 import { useAppStore } from '../stores/appStore';
+import { useAuthStore } from '../stores/authStore';
 import SnippetCard from '../components/snippets/SnippetCard';
 import SnippetDetailModal from '../components/snippets/SnippetDetailModal';
+import AddSnippetModal from '../components/snippets/AddSnippetModal';
 
 function BrowseSnippets({ onBack }) {
   const {
@@ -29,12 +31,21 @@ function BrowseSnippets({ onBack }) {
     setViewMode,
     getFilteredSnippets,
     snippets,
+    fetchSnippets,
+    isLoading,
   } = useSnippetStore();
 
   const { isPinned, setIsPinned } = useAppStore();
+  const { isAuthenticated } = useAuthStore();
 
   const [showFilters, setShowFilters] = useState(false);
   const [selectedSnippet, setSelectedSnippet] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  // Fetch snippets on mount
+  useEffect(() => {
+    fetchSnippets();
+  }, [fetchSnippets]);
 
   const filteredSnippets = getFilteredSnippets();
 
@@ -185,32 +196,48 @@ function BrowseSnippets({ onBack }) {
             )}
 
             <span className="text-xs text-gray-500">
-              {filteredSnippets.length} results
+              {isLoading ? 'Loading...' : `${filteredSnippets.length} results`}
             </span>
           </div>
 
-          {/* View Mode Toggle */}
-          <div className="flex items-center gap-1 bg-surface-light rounded-lg p-0.5 border border-glass-border">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-md transition-colors ${
-                viewMode === 'grid'
-                  ? 'bg-accent-teal/20 text-accent-teal'
-                  : 'text-gray-500 hover:text-white'
-              }`}
-            >
-              <Grid size={14} />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded-md transition-colors ${
-                viewMode === 'list'
-                  ? 'bg-accent-teal/20 text-accent-teal'
-                  : 'text-gray-500 hover:text-white'
-              }`}
-            >
-              <List size={14} />
-            </button>
+          {/* Right Controls */}
+          <div className="flex items-center gap-2">
+            {/* Add Snippet Button */}
+            {isAuthenticated && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg
+                           bg-gradient-to-r from-accent-teal to-accent-blue text-white
+                           hover:shadow-neon-teal transition-all"
+              >
+                <Plus size={14} />
+                Add
+              </button>
+            )}
+
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-1 bg-surface-light rounded-lg p-0.5 border border-glass-border">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded-md transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-accent-teal/20 text-accent-teal'
+                    : 'text-gray-500 hover:text-white'
+                }`}
+              >
+                <Grid size={14} />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded-md transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-accent-teal/20 text-accent-teal'
+                    : 'text-gray-500 hover:text-white'
+                }`}
+              >
+                <List size={14} />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -389,6 +416,20 @@ function BrowseSnippets({ onBack }) {
             snippet={selectedSnippet}
             onClose={() => setSelectedSnippet(null)}
             isViewOnly={true}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Add Snippet Modal */}
+      <AnimatePresence>
+        {showAddModal && (
+          <AddSnippetModal
+            isOpen={showAddModal}
+            onClose={() => setShowAddModal(false)}
+            onSnippetAdded={() => {
+              setShowAddModal(false);
+              fetchSnippets(); // Refresh the list
+            }}
           />
         )}
       </AnimatePresence>
